@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: buddio-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: buddio_user
+      POSTGRES_PASSWORD: buddio_password
+      POSTGRES_DB: buddio_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  pgdata:

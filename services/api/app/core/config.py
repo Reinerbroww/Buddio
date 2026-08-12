@@ -1,7 +1,7 @@
 import os
-from typing import List, Optional
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field
+from typing import List, Optional, Annotated
+from pydantic_settings import BaseSettings, SettingsConfigDict, NoDecode
+from pydantic import Field, field_validator
 
 # Determine the workspace root relative to this file
 # This config is located at services/api/app/core/config.py
@@ -20,7 +20,14 @@ class Settings(BaseSettings):
     GEMINI_MODEL: str = "gemini-flash-latest"
 
     # CORS - keep explicit in production.
-    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    CORS_ORIGINS: Annotated[List[str], NoDecode] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def _split_cors_origins(cls, v):
+        if isinstance(v, str):
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return v
 
     # Daily AI quota defaults.
     QUOTA_CHAT_DAILY: int = 20

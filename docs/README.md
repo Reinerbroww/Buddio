@@ -25,7 +25,7 @@ Detail: [00-keputusan-produk-dan-stack.md](./00-keputusan-produk-dan-stack.md)
 
 ## Status
 
-Perencanaan v1.1 — **belum ada implementasi kode**.
+Perencanaan v1.1 **sudah diimplementasikan sebagai MVP** — frontend (Next.js) dan backend (FastAPI + PostgreSQL) berjalan end-to-end. Lihat [README root](../README.md) untuk panduan menjalankan.
 
 ## Langkah berikutnya (suggested)
 

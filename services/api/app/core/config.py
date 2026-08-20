@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = Field(default="postgresql+psycopg://buddio_user:buddio_password@localhost:5432/buddio_db?connect_timeout=3")
 
     GEMINI_API_KEY: Optional[str] = Field(default=None)
-    GEMINI_MODEL: str = "gemini-flash-latest"
+    GEMINI_MODEL: str = "gemini-flash-lite-latest"
 
     # CORS - keep explicit in production.
     CORS_ORIGINS: Annotated[List[str], NoDecode] = ["http://localhost:3000", "http://127.0.0.1:3000"]

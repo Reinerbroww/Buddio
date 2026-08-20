@@ -374,6 +374,17 @@ function RoadmapPageContent() {
                         </button>
                       )}
                       <button
+                        onClick={() => {
+                          const queryPrompt = `Kak, tolong jelaskan tentang langkah belajar "${step.title}" dalam topik "${topic?.title ?? ""}". Apa konsep utamanya dan bagaimana cara memahaminya?`;
+                          router.push(`/dashboard/mentor?topic=${selectedTopicId}&prompt=${encodeURIComponent(queryPrompt)}`);
+                        }}
+                        title="Tanya Mentor (Fast Track)"
+                        className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold text-[#4F8EF7] bg-[#4F8EF7]/8 hover:bg-[#4F8EF7]/15 border border-[#4F8EF7]/20 rounded-lg shadow-xs hover:scale-[1.02] transition-all duration-200"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Tanya Mentor</span>
+                      </button>
+                      <button
                         onClick={() => toggleExpand(step.id)}
                         aria-label={isExpanded ? "Tutup deskripsi" : "Buka deskripsi"}
                         className="shrink-0 p-1 rounded-lg text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-colors"
@@ -387,7 +398,7 @@ function RoadmapPageContent() {
                       <div className="px-4 pb-4">
                         <div className="pl-9">
                           {step.description ? (
-                            <p className="text-xs text-slate-500 leading-relaxed">{step.description}</p>
+                            <p className="text-xs text-slate-500 leading-relaxed whitespace-pre-wrap">{step.description}</p>
                           ) : (
                             <p className="text-xs text-slate-400 italic">Tidak ada deskripsi untuk langkah ini.</p>
                           )}

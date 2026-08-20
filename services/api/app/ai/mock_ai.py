@@ -6,11 +6,36 @@ can clearly label generated content.
 """
 
 ROADMAP_TEMPLATES = [
-    ("Pengenalan {t}", "Pahami konsep dasar, istilah penting, dan gambaran umum tentang {t}."),
-    ("Konsep Inti {t}", "Pelajari prinsip dan ide utama yang menjadi fondasi {t}."),
-    ("Latihan Terpandu", "Kerjakan latihan bertahap untuk menguji pemahaman dasar kamu tentang {t}."),
-    ("Studi Kasus & Penerapan", "Terapkan pengetahuan {t} pada contoh nyata dan studi kasus sederhana."),
-    ("Evaluasi & Penguatan", "Ukur pemahamanmu dengan kuis singkat dan ulangi bagian yang masih lemah."),
+    (
+        "Pengenalan {t}",
+        "• Apa yang dipelajari: Konsep dasar, istilah penting, dan gambaran umum tentang {t}.\n"
+        "• Mengapa penting: Membangun fondasi yang kuat sebelum melangkah ke konsep yang lebih dalam.\n"
+        "• Aktivitas belajar: Membaca materi pengantar dan membuat rangkuman kecil istilah penting."
+    ),
+    (
+        "Konsep Inti {t}",
+        "• Apa yang dipelajari: Prinsip dan ide utama yang menjadi fondasi {t}.\n"
+        "• Mengapa penting: Memahami logika dan alasan di balik konsep ini agar tidak bingung.\n"
+        "• Aktivitas belajar: Menggambar peta konsep/mindmap yang menghubungkan topik utama."
+    ),
+    (
+        "Latihan Terpandu",
+        "• Apa yang dipelajari: Cara menyelesaikan persoalan terkait {t} dari tingkat mudah ke sulit secara bertahap.\n"
+        "• Mengapa penting: Mengasah keterampilan praktis dan membiasakan diri memecahkan masalah.\n"
+        "• Aktivitas belajar: Mengerjakan 3 soal latihan dasar dengan panduan atau tips dari mentor."
+    ),
+    (
+        "Studi Kasus & Penerapan",
+        "• Apa yang dipelajari: Penerapan {t} pada contoh nyata dan skenario dunia nyata.\n"
+        "• Mengapa penting: Membantu melihat manfaat nyata dari ilmu yang sedang dipelajari.\n"
+        "• Aktivitas belajar: Menganalisis satu studi kasus praktis dan menjelaskan bagaimana {t} mengatasinya."
+    ),
+    (
+        "Evaluasi & Penguatan",
+        "• Apa yang dipelajari: Menguji pemahaman menyeluruh tentang {t} dan mengulang bagian yang masih kurang.\n"
+        "• Mengapa penting: Mengetahui batas pemahamanmu agar bisa diperbaiki secara mandiri.\n"
+        "• Aktivitas belajar: Mengerjakan kuis evaluasi 5 soal pilihan ganda di Buddio."
+    ),
 ]
 
 QUIZ_TEMPLATES = [
@@ -85,9 +110,19 @@ def mock_quiz(topic_title: str, count: int = 5) -> dict:
 
 def mock_chat(message: str, topic_title: str) -> str:
     return (
-        f"Hmm, pertanyaan bagus tentang {topic_title}! (Mode demo)\n\n"
-        f"Kamu bertanya: \"{message}\"\n\n"
-        f"Sebagai panduan umum: coba pecah masalahmu menjadi bagian kecil, pelajari konsep dasarnya dulu, "
-        f"lalu berlatih dengan contoh soal. Untuk jawaban yang lebih spesifik dan personal, "
-        f"aktifkan GEMINI_API_KEY di file .env — nanti aku bisa jelaskan sesuai jenjang dan materimu."
+        "Halo Adik hebat! 🌟\n\n"
+        "Kak Buddio senang sekali bisa menemani kamu belajar hari ini!\n\n"
+        "### 🎒 4 Jurus Rahasia Operasi Hitung Dasar\n\n"
+        "1. **🔢 Mengenal Angka & Jumlah**\n"
+        "   - Angka adalah simbol untuk menghitung benda.\n"
+        "   - Contoh: Angka **3** artinya ada 🍎 🍎 🍎 tiga buah apel.\n"
+        "   - Rumus matematika sederhana: $2 \\times 3 = 6$\n\n"
+        "2. **➕ Penjumlahan**\n"
+        "   - Konsepnya adalah **menggabungkan** benda.\n"
+        "   - Persamaan matematika lanjutan:\n"
+        "     $$x^2 + y^2 = z^2$$\n\n"
+        "---\n\n"
+        "### 🧩 Tebak-Tebakan Seru\n\n"
+        "Kamu punya **3 robot** 🤖🤖🤖 lalu mendapat **2 robot** lagi.\n\n"
+        "Berapa jumlah robotmu?"
     )

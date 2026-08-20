@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import { AuthProvider } from "@/context/AuthContext";
 import "./globals.css";
+import "katex/dist/katex.min.css";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-heading",
@@ -25,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id" className={`${jakarta.variable} ${inter.variable} h-full antialiased`}>
+    <html lang="id" className={`${jakarta.variable} ${inter.variable} h-full antialiased`} data-scroll-behavior="smooth">
       <body className="min-h-full flex flex-col">
         <AuthProvider>{children}</AuthProvider>
       </body>

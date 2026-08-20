@@ -2,8 +2,12 @@
 
 import React, { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Send, Sparkles, Trash2, Loader2, GraduationCap, ArrowRight } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 import api, { ApiError } from "@/services/api";
 import type { ChatHistory, ChatMessageItem, ChatResponse, Topic } from "@/lib/types";
 
@@ -20,6 +24,7 @@ function BuddioAvatar({ className = "w-7 h-7 text-[10px]" }: { className?: strin
 }
 
 function MentorPageContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const topicParam = searchParams.get("topic");
 
@@ -60,6 +65,7 @@ function MentorPageContent() {
   }, [loadTopics]);
 
   const loadHistory = useCallback((topicId: number) => {
+    setLoadingHistory(true);
     api
       .get<ChatHistory[]>(`/mentor/history/${topicId}`)
       .then((history) => {
@@ -83,8 +89,8 @@ function MentorPageContent() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, sending, loadingHistory]);
 
-  const handleSend = async () => {
-    const text = input.trim();
+  const handleSend = useCallback(async (overrideText?: string) => {
+    const text = (overrideText !== undefined ? overrideText : input).trim();
     if (!text || sending || selectedTopicId == null || remaining === 0) return;
     const tempId = Date.now();
     const userMsg: ChatMessageItem = {
@@ -94,7 +100,9 @@ function MentorPageContent() {
       created_at: new Date().toISOString(),
     };
     setMessages((m) => [...m, userMsg]);
-    setInput("");
+    if (overrideText === undefined) {
+      setInput("");
+    }
     setError(null);
     setSending(true);
     try {
@@ -119,11 +127,28 @@ function MentorPageContent() {
         setError("Gagal mengirim pesan.");
       }
       setMessages((m) => m.filter((msg) => msg.id !== tempId));
-      setInput(text);
+      if (overrideText === undefined) {
+        setInput(text);
+      }
     } finally {
       setSending(false);
     }
-  };
+  }, [input, sending, selectedTopicId, remaining]);
+
+  const hasAutoSent = useRef(false);
+
+  useEffect(() => {
+    const promptParam = searchParams.get("prompt");
+    if (promptParam && selectedTopicId != null && !loadingTopics && !loadingHistory && !hasAutoSent.current) {
+      hasAutoSent.current = true;
+      
+      const params = new URLSearchParams(window.location.search);
+      params.delete("prompt");
+      router.replace(`?${params.toString()}`);
+      
+      handleSend(promptParam);
+    }
+  }, [selectedTopicId, loadingTopics, loadingHistory, searchParams, router, handleSend]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -272,8 +297,35 @@ function MentorPageContent() {
               ) : (
                 <div key={msg.id} className="flex items-end gap-2 animate-in fade-in duration-300">
                   <BuddioAvatar />
-                  <div className="max-w-[80%] px-4 py-3 bg-white border border-slate-100 text-slate-700 text-sm leading-relaxed rounded-2xl rounded-bl-md shadow-sm whitespace-pre-wrap break-words">
-                    {msg.message}
+                  <div className="max-w-[80%] px-4 py-3 bg-white border border-slate-100 text-slate-700 text-sm leading-relaxed rounded-2xl rounded-bl-md shadow-sm break-words">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm, remarkMath]}
+                      rehypePlugins={[rehypeKatex]}
+                      components={{
+                        p: ({ node, ...props }) => <p className="mb-2 last:mb-0 leading-relaxed text-sm" {...props} />,
+                        strong: ({ node, ...props }) => <strong className="font-extrabold text-slate-900" {...props} />,
+                        em: ({ node, ...props }) => <em className="italic" {...props} />,
+                        h1: ({ node, ...props }) => <h1 className="text-xl font-extrabold text-slate-900 mt-4 mb-2 first:mt-0" {...props} />,
+                        h2: ({ node, ...props }) => <h2 className="text-lg font-bold text-slate-900 mt-3 mb-2 first:mt-0" {...props} />,
+                        h3: ({ node, ...props }) => <h3 className="text-base font-bold text-slate-900 mt-3 mb-1.5 first:mt-0" {...props} />,
+                        h4: ({ node, ...props }) => <h4 className="text-sm font-semibold text-slate-800 mt-2 mb-1 first:mt-0" {...props} />,
+                        ul: ({ node, ...props }) => <ul className="list-disc pl-5 mb-2 space-y-1" {...props} />,
+                        ol: ({ node, ...props }) => <ol className="list-decimal pl-5 mb-2 space-y-1" {...props} />,
+                        li: ({ node, ...props }) => <li className="text-sm leading-relaxed" {...props} />,
+                        hr: ({ node, ...props }) => <hr className="my-4 border-slate-200/60" {...props} />,
+                        a: ({ node, ...props }) => <a className="text-[#4F8EF7] hover:underline font-semibold" target="_blank" rel="noopener noreferrer" {...props} />,
+                        blockquote: ({ node, ...props }) => <blockquote className="border-l-4 border-slate-200 pl-3 italic my-2 text-slate-500 bg-slate-50/50 py-1 pr-2 rounded-r-lg" {...props} />,
+                        pre: ({ node, ...props }) => <pre className="block bg-slate-50 text-slate-800 p-3 rounded-xl text-xs font-mono border border-slate-100 overflow-x-auto my-3 max-w-full" {...props} />,
+                        code: ({ node, inline, ...props }: any) => 
+                          inline ? (
+                            <code className="bg-slate-50 text-slate-800 px-1 py-0.5 rounded text-xs font-mono border border-slate-100" {...props} />
+                          ) : (
+                            <code className="font-mono text-xs" {...props} />
+                          )
+                      }}
+                    >
+                      {msg.message}
+                    </ReactMarkdown>
                   </div>
                 </div>
               )
@@ -292,7 +344,7 @@ function MentorPageContent() {
             className="flex-1 resize-none px-4 py-3 text-sm bg-slate-50 border border-slate-100 focus:border-[#4F8EF7] focus:bg-white rounded-xl outline-none transition-all text-slate-800 placeholder-slate-400"
           />
           <button
-            onClick={handleSend}
+            onClick={() => handleSend()}
             disabled={sending || !input.trim() || remaining === 0}
             className="inline-flex items-center justify-center w-11 h-11 shrink-0 bg-gradient-to-r from-[#4F8EF7] to-[#7C5CFF] text-white rounded-xl shadow-md shadow-[#4F8EF7]/15 hover:scale-[1.05] transition-all disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed"
           >

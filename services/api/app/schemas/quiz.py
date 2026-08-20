@@ -26,7 +26,6 @@ class QuizResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 class QuizSubmit(BaseModel):
-    quiz_id: int
     answers: Dict[int, int]  # {question_id: option_index}
 
 class QuizAttemptResponse(BaseModel):

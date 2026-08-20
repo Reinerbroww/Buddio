@@ -33,12 +33,18 @@ def debug_ai():
         result["import_ok"] = True
         client = genai.Client(api_key=settings.GEMINI_API_KEY)
         result["client_ok"] = True
+        from google.genai import types
         resp = client.models.generate_content(
             model=settings.GEMINI_MODEL,
-            contents="Say OK",
+            contents="Say exactly: OK",
+            config=types.GenerateContentConfig(
+                system_instruction="You are Buddio. Reply in Bahasa Indonesia.",
+                max_output_tokens=2048,
+                temperature=0.6,
+            ),
         )
         result["api_ok"] = True
-        result["response"] = (resp.text or "")[:100]
+        result["response"] = (resp.text or "")[:200]
     except Exception as e:
         result["error"] = str(e)
     return result

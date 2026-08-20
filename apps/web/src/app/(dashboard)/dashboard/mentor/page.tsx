@@ -302,26 +302,28 @@ function MentorPageContent() {
                       remarkPlugins={[remarkGfm, remarkMath]}
                       rehypePlugins={[rehypeKatex]}
                       components={{
-                        p: ({ node, ...props }) => <p className="mb-2 last:mb-0 leading-relaxed text-sm" {...props} />,
-                        strong: ({ node, ...props }) => <strong className="font-extrabold text-slate-900" {...props} />,
-                        em: ({ node, ...props }) => <em className="italic" {...props} />,
-                        h1: ({ node, ...props }) => <h1 className="text-xl font-extrabold text-slate-900 mt-4 mb-2 first:mt-0" {...props} />,
-                        h2: ({ node, ...props }) => <h2 className="text-lg font-bold text-slate-900 mt-3 mb-2 first:mt-0" {...props} />,
-                        h3: ({ node, ...props }) => <h3 className="text-base font-bold text-slate-900 mt-3 mb-1.5 first:mt-0" {...props} />,
-                        h4: ({ node, ...props }) => <h4 className="text-sm font-semibold text-slate-800 mt-2 mb-1 first:mt-0" {...props} />,
-                        ul: ({ node, ...props }) => <ul className="list-disc pl-5 mb-2 space-y-1" {...props} />,
-                        ol: ({ node, ...props }) => <ol className="list-decimal pl-5 mb-2 space-y-1" {...props} />,
-                        li: ({ node, ...props }) => <li className="text-sm leading-relaxed" {...props} />,
-                        hr: ({ node, ...props }) => <hr className="my-4 border-slate-200/60" {...props} />,
-                        a: ({ node, ...props }) => <a className="text-[#4F8EF7] hover:underline font-semibold" target="_blank" rel="noopener noreferrer" {...props} />,
-                        blockquote: ({ node, ...props }) => <blockquote className="border-l-4 border-slate-200 pl-3 italic my-2 text-slate-500 bg-slate-50/50 py-1 pr-2 rounded-r-lg" {...props} />,
-                        pre: ({ node, ...props }) => <pre className="block bg-slate-50 text-slate-800 p-3 rounded-xl text-xs font-mono border border-slate-100 overflow-x-auto my-3 max-w-full" {...props} />,
-                        code: ({ node, inline, ...props }: any) => 
-                          inline ? (
-                            <code className="bg-slate-50 text-slate-800 px-1 py-0.5 rounded text-xs font-mono border border-slate-100" {...props} />
+                        p: (props) => <p className="mb-2 last:mb-0 leading-relaxed text-sm" {...props} />,
+                        strong: (props) => <strong className="font-extrabold text-slate-900" {...props} />,
+                        em: (props) => <em className="italic" {...props} />,
+                        h1: (props) => <h1 className="text-xl font-extrabold text-slate-900 mt-4 mb-2 first:mt-0" {...props} />,
+                        h2: (props) => <h2 className="text-lg font-bold text-slate-900 mt-3 mb-2 first:mt-0" {...props} />,
+                        h3: (props) => <h3 className="text-base font-bold text-slate-900 mt-3 mb-1.5 first:mt-0" {...props} />,
+                        h4: (props) => <h4 className="text-sm font-semibold text-slate-800 mt-2 mb-1 first:mt-0" {...props} />,
+                        ul: (props) => <ul className="list-disc pl-5 mb-2 space-y-1" {...props} />,
+                        ol: (props) => <ol className="list-decimal pl-5 mb-2 space-y-1" {...props} />,
+                        li: (props) => <li className="text-sm leading-relaxed" {...props} />,
+                        hr: (props) => <hr className="my-4 border-slate-200/60" {...props} />,
+                        a: (props) => <a className="text-[#4F8EF7] hover:underline font-semibold" target="_blank" rel="noopener noreferrer" {...props} />,
+                        blockquote: (props) => <blockquote className="border-l-4 border-slate-200 pl-3 italic my-2 text-slate-500 bg-slate-50/50 py-1 pr-2 rounded-r-lg" {...props} />,
+                        pre: (props) => <pre className="block bg-slate-50 text-slate-800 p-3 rounded-xl text-xs font-mono border border-slate-100 overflow-x-auto my-3 max-w-full" {...props} />,
+                        code: ({ className, children, ...props }: any) => {
+                          const isBlock = className?.includes("language-");
+                          return isBlock ? (
+                            <code className="font-mono text-xs" {...props}>{children}</code>
                           ) : (
-                            <code className="font-mono text-xs" {...props} />
-                          )
+                            <code className="bg-slate-50 text-slate-800 px-1 py-0.5 rounded text-xs font-mono border border-slate-100" {...props}>{children}</code>
+                          );
+                        }
                       }}
                     >
                       {msg.message}

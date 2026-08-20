@@ -49,6 +49,7 @@ export default function AssessmentPage() {
   const [error, setError] = useState<string | null>(null);
 
   const loadQuizzes = useCallback((topicId: number) => {
+    setLoadingQuizzes(true);
     api
       .get<Quiz[]>(`/quiz/topic/${topicId}`)
       .then((data) => setQuizzes(data))

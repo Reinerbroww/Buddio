@@ -24,3 +24,21 @@ def health_check(db: Session = Depends(get_db)):
         "force_mock": settings.FORCE_MOCK_AI,
         "app_env": settings.APP_ENV,
     }
+
+@router.get("/debug-ai")
+def debug_ai():
+    result = {"key_set": bool(settings.GEMINI_API_KEY), "model": settings.GEMINI_MODEL}
+    try:
+        from google import genai
+        result["import_ok"] = True
+        client = genai.Client(api_key=settings.GEMINI_API_KEY)
+        result["client_ok"] = True
+        resp = client.models.generate_content(
+            model=settings.GEMINI_MODEL,
+            contents="Say OK",
+        )
+        result["api_ok"] = True
+        result["response"] = (resp.text or "")[:100]
+    except Exception as e:
+        result["error"] = str(e)
+    return result

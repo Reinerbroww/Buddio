@@ -136,13 +136,18 @@ def mock_lesson(step_title: str, topic_title: str) -> dict:
         "videos": [
             {
                 "title": f"Penjelasan Dasar {step_title}",
-                "url": f"https://www.youtube.com/results?search_query={step_title.replace(' ', '+')}+pembelajaran",
+                "url": f"https://www.youtube.com/results?search_query={step_title.replace(' ', '+')}+tutorial+bahasa+indonesia",
                 "description": f"Video penjelasan dasar tentang {step_title} untuk pemula."
             },
             {
                 "title": f"Pembahasan Mendalam {step_title}",
-                "url": f"https://www.youtube.com/results?search_query={step_title.replace(' ', '+')}+lanjutan",
+                "url": f"https://www.youtube.com/results?search_query={step_title.replace(' ', '+')}+lanjutan+{topic_title.replace(' ', '+')}",
                 "description": f"Video pembahasan lebih dalam mengenai {step_title}."
+            },
+            {
+                "title": f"Latihan Soal {step_title}",
+                "url": f"https://www.youtube.com/results?search_query={step_title.replace(' ', '+')}+latihan+soal",
+                "description": f"Video latihan soal tentang {step_title}."
             }
         ],
     }

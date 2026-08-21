@@ -103,6 +103,12 @@ function extractYouTubeId(url: string): string | null {
   return null;
 }
 
+function extractYouTubeSearchQuery(url: string): string | null {
+  const match = url.match(/youtube\.com\/results\?search_query=([^&]+)/);
+  if (match) return decodeURIComponent(match[1].replace(/\+/g, " "));
+  return null;
+}
+
 function MateriPageContent() {
   const params = useParams();
   const router = useRouter();
@@ -301,6 +307,7 @@ function MateriPageContent() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {videos.map((v, i) => {
                   const ytId = extractYouTubeId(v.url);
+                  const searchQuery = !ytId ? extractYouTubeSearchQuery(v.url) : null;
                   return (
                     <div
                       key={i}
@@ -310,6 +317,16 @@ function MateriPageContent() {
                         <div className="aspect-video w-full">
                           <iframe
                             src={`https://www.youtube.com/embed/${ytId}`}
+                            title={v.title}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            className="w-full h-full"
+                          />
+                        </div>
+                      ) : searchQuery ? (
+                        <div className="aspect-video w-full">
+                          <iframe
+                            src={`https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(searchQuery)}`}
                             title={v.title}
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                             allowFullScreen
@@ -335,14 +352,12 @@ function MateriPageContent() {
                           <ExternalLink className="w-4 h-4 text-slate-400 shrink-0" />
                         </a>
                       )}
-                      {ytId && (
-                        <div className="px-3 py-2.5 border-t border-slate-100">
-                          <p className="text-xs font-semibold text-slate-900">{v.title}</p>
-                          {v.description && (
-                            <p className="text-[11px] text-slate-500 mt-0.5">{v.description}</p>
-                          )}
-                        </div>
-                      )}
+                      <div className="px-3 py-2.5 border-t border-slate-100">
+                        <p className="text-xs font-semibold text-slate-900">{v.title}</p>
+                        {v.description && (
+                          <p className="text-[11px] text-slate-500 mt-0.5">{v.description}</p>
+                        )}
+                      </div>
                     </div>
                   );
                 })}

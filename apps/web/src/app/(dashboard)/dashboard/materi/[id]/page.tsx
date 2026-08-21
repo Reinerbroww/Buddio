@@ -103,12 +103,6 @@ function extractYouTubeId(url: string): string | null {
   return null;
 }
 
-function extractYouTubeSearchQuery(url: string): string | null {
-  const match = url.match(/youtube\.com\/results\?search_query=([^&]+)/);
-  if (match) return decodeURIComponent(match[1].replace(/\+/g, " "));
-  return null;
-}
-
 function MateriPageContent() {
   const params = useParams();
   const router = useRouter();
@@ -304,60 +298,51 @@ function MateriPageContent() {
                   </p>
                 </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-4">
                 {videos.map((v, i) => {
                   const ytId = extractYouTubeId(v.url);
-                  const searchQuery = !ytId ? extractYouTubeSearchQuery(v.url) : null;
                   return (
                     <div
                       key={i}
                       className="bg-slate-50 border border-slate-100 rounded-xl overflow-hidden hover:border-[#4F8EF7]/30 transition-all duration-200"
                     >
                       {ytId ? (
-                        <div className="aspect-video w-full">
-                          <iframe
-                            src={`https://www.youtube.com/embed/${ytId}`}
-                            title={v.title}
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                            className="w-full h-full"
-                          />
-                        </div>
-                      ) : searchQuery ? (
-                        <div className="aspect-video w-full">
-                          <iframe
-                            src={`https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(searchQuery)}`}
-                            title={v.title}
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                            className="w-full h-full"
-                          />
-                        </div>
+                        <>
+                          <div className="aspect-video w-full">
+                            <iframe
+                              src={`https://www.youtube.com/embed/${ytId}?rel=0`}
+                              title={v.title}
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                              className="w-full h-full"
+                            />
+                          </div>
+                          <div className="px-4 py-3">
+                            <p className="text-sm font-bold text-slate-900">{v.title}</p>
+                            {v.description && (
+                              <p className="text-xs text-slate-500 mt-1">{v.description}</p>
+                            )}
+                          </div>
+                        </>
                       ) : (
                         <a
                           href={v.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-3 p-4 hover:bg-slate-100 transition-colors"
+                          className="flex items-center gap-4 p-4 hover:bg-slate-100/80 transition-colors"
                         >
-                          <div className="w-10 h-10 rounded-lg bg-rose-100 flex items-center justify-center shrink-0">
-                            <Play className="w-5 h-5 text-rose-500" />
+                          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-rose-100 to-rose-50 flex items-center justify-center shrink-0">
+                            <Play className="w-6 h-6 text-rose-500 ml-0.5" />
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-semibold text-slate-900 truncate">{v.title}</p>
-                            <p className="text-[11px] text-slate-500 truncate">
-                              {v.description || "Klik untuk menonton"}
-                            </p>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-slate-900">{v.title}</p>
+                            {v.description && (
+                              <p className="text-xs text-slate-500 mt-0.5">{v.description}</p>
+                            )}
                           </div>
                           <ExternalLink className="w-4 h-4 text-slate-400 shrink-0" />
                         </a>
                       )}
-                      <div className="px-3 py-2.5 border-t border-slate-100">
-                        <p className="text-xs font-semibold text-slate-900">{v.title}</p>
-                        {v.description && (
-                          <p className="text-[11px] text-slate-500 mt-0.5">{v.description}</p>
-                        )}
-                      </div>
                     </div>
                   );
                 })}

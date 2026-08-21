@@ -9,7 +9,23 @@ from app.routers import health, auth, users, onboarding, topics, roadmaps, lesso
 async def lifespan(app: FastAPI):
     import app.models  # noqa: F401 - register all models
     Base.metadata.create_all(bind=engine)
+    _safe_migrate()
     yield
+
+
+def _safe_migrate():
+    """Run safe, idempotent schema migrations that create_all won't handle."""
+    from sqlalchemy import text
+    migrations = [
+        "ALTER TABLE lessons ADD COLUMN IF NOT EXISTS video_urls JSON",
+    ]
+    with engine.connect() as conn:
+        for sql in migrations:
+            try:
+                conn.execute(text(sql))
+                conn.commit()
+            except Exception:
+                pass
 
 app = FastAPI(
     title=settings.APP_NAME,

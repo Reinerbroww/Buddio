@@ -2,9 +2,9 @@
 
 import React, { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Sparkles, Loader2, Map, RefreshCw, BookOpen, X, Clock, Target, ChevronDown, Check } from "lucide-react";
+import { Sparkles, Loader2, Map, RefreshCw, BookOpen, Clock, Target, ChevronDown, Check } from "lucide-react";
 import api, { ApiError } from "@/services/api";
-import type { Topic, Roadmap, RoadmapStep, Lesson } from "@/lib/types";
+import type { Topic, Roadmap, RoadmapStep } from "@/lib/types";
 
 function difficultyStyle(difficulty: string | null | undefined) {
   if (!difficulty) return null;
@@ -39,10 +39,6 @@ function RoadmapPageContent() {
   const [error, setError] = useState<string | null>(null);
   const [quotaExceeded, setQuotaExceeded] = useState(false);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
-  const [lessonStep, setLessonStep] = useState<RoadmapStep | null>(null);
-  const [lesson, setLesson] = useState<Lesson | null>(null);
-  const [lessonLoading, setLessonLoading] = useState(false);
-  const [lessonError, setLessonError] = useState<string | null>(null);
   const timerRef = useRef<number | null>(null);
 
   const loadTopics = useCallback(() => {
@@ -168,22 +164,6 @@ function RoadmapPageContent() {
       else next.add(stepId);
       return next;
     });
-  }, []);
-
-  const openLesson = useCallback(async (step: RoadmapStep) => {
-    if (!step.lesson_id) return;
-    setLessonStep(step);
-    setLesson(null);
-    setLessonError(null);
-    setLessonLoading(true);
-    try {
-      const data = await api.get<Lesson>(`/lessons/${step.lesson_id}`);
-      setLesson(data);
-    } catch (err) {
-      setLessonError(err instanceof ApiError ? err.message : "Gagal memuat materi.");
-    } finally {
-      setLessonLoading(false);
-    }
   }, []);
 
   const topic = selectedTopicId != null ? topics.find((t) => t.id === selectedTopicId) : undefined;
@@ -366,7 +346,7 @@ function RoadmapPageContent() {
                       </div>
                       {step.lesson_id && (
                         <button
-                          onClick={() => openLesson(step)}
+                          onClick={() => router.push(`/dashboard/materi/${step.lesson_id}`)}
                           className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold text-white bg-gradient-to-r from-[#4F8EF7] to-[#7C5CFF] rounded-lg shadow-xs hover:scale-[1.02] transition-all duration-200"
                         >
                           <BookOpen className="w-3.5 h-3.5" />
@@ -432,39 +412,6 @@ function RoadmapPageContent() {
         </>
       )}
 
-      {lessonStep && (
-        <>
-          <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-50 animate-in fade-in duration-300" onClick={() => setLessonStep(null)} />
-          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-xl border border-slate-100 p-6 w-[90%] max-w-lg z-50 animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-              <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-[#4F8EF7]" />
-                Materi: {lessonStep.title}
-              </h3>
-              <button
-                onClick={() => setLessonStep(null)}
-                className="p-1 rounded-lg text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="mt-4 max-h-[60vh] overflow-y-auto">
-              {lessonLoading ? (
-                <div className="flex items-center justify-center py-10">
-                  <Loader2 className="w-6 h-6 text-[#4F8EF7] animate-spin" />
-                </div>
-              ) : lessonError ? (
-                <div className="text-xs bg-rose-50 border border-rose-200 text-rose-600 rounded-xl px-4 py-3">{lessonError}</div>
-              ) : lesson ? (
-                <div className="space-y-4">
-                  <div className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">{lesson.content}</div>
-                  {lesson.source && <div className="text-[11px] text-slate-400">Sumber: {lesson.source}</div>}
-                </div>
-              ) : null}
-            </div>
-          </div>
-        </>
-      )}
     </div>
   );
 }

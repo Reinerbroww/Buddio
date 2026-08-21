@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, Text, String, DateTime, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
+from sqlalchemy.types import JSON
 from app.core.database import Base
 
 class Lesson(Base):
@@ -10,6 +11,7 @@ class Lesson(Base):
     roadmap_step_id = Column(Integer, ForeignKey("roadmap_steps.id"), nullable=False, index=True)
     content = Column(Text, nullable=True)
     source = Column(String, nullable=True)  # e.g. "AI Buddio"
+    video_urls = Column(JSON, nullable=True)  # [{"title": "...", "url": "...", "description": "..."}]
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

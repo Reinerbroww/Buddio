@@ -46,7 +46,17 @@ export interface Lesson {
   roadmap_step_id: number;
   content?: string | null;
   source?: string | null;
+  video_urls?: VideoItem[] | null;
+  step_title?: string | null;
+  topic_title?: string | null;
+  topic_id?: number | null;
   created_at: string;
+}
+
+export interface VideoItem {
+  title: string;
+  url: string;
+  description?: string | null;
 }
 
 export interface ChatResponse {

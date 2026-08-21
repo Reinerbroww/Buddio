@@ -108,6 +108,46 @@ def mock_quiz(topic_title: str, count: int = 5) -> dict:
     }
 
 
+def mock_lesson(step_title: str, topic_title: str) -> dict:
+    return {
+        "content": (
+            f"## Penjelasan Konsep\n\n"
+            f"Materi ini membahas tentang **{step_title}** dalam topik **{topic_title}**.\n\n"
+            f"Konsep dasar yang perlu dipahami adalah fondasi dari seluruh pembahasan ini. "
+            f"Dengan memahami {step_title}, kamu akan memiliki dasar yang kuat untuk langkah selanjutnya.\n\n"
+            f"## Poin-Poin Penting\n\n"
+            f"- **Istilah Penting 1**: Definisi dan penjelasan singkat.\n"
+            f"- **Istilah Penting 2**: Hubungan dengan konsep lain dalam {topic_title}.\n"
+            f"- **Istilah Penting 3**: Penerapan dalam konteks nyata.\n\n"
+            f"## Contoh\n\n"
+            f"### Contoh 1\n"
+            f"Berikut adalah contoh penerapan {step_title} dalam kehidupan sehari-hari.\n\n"
+            f"### Contoh 2\n"
+            f"Lain kali, cobalah hubungkan konsep ini dengan pengalamanmu sendiri.\n\n"
+            f"## Contoh Soal\n\n"
+            f"**Soal 1**: Apa pengertian dari {step_title}?\n"
+            f"**Jawaban**: {step_title} adalah konsep penting dalam {topic_title} yang berfungsi sebagai fondasi.\n\n"
+            f"**Soal 2**: Sebutkan 2 manfaat mempelajari {step_title}.\n"
+            f"**Jawaban**: (1) Memahami konsep dasar, (2) Membangun fondasi untuk materi lanjutan.\n\n"
+            f"## Ringkasan Materi\n\n"
+            f"Secara singkat, {step_title} adalah bagian penting dari {topic_title} yang harus dikuasai "
+            f"sebelum melangkah ke langkah berikutnya. Pahami konsepnya, kerjakan latihannya, dan jangan ragu untuk bertanya!"
+        ),
+        "videos": [
+            {
+                "title": f"Penjelasan Dasar {step_title}",
+                "url": f"https://www.youtube.com/results?search_query={step_title.replace(' ', '+')}+pembelajaran",
+                "description": f"Video penjelasan dasar tentang {step_title} untuk pemula."
+            },
+            {
+                "title": f"Pembahasan Mendalam {step_title}",
+                "url": f"https://www.youtube.com/results?search_query={step_title.replace(' ', '+')}+lanjutan",
+                "description": f"Video pembahasan lebih dalam mengenai {step_title}."
+            }
+        ],
+    }
+
+
 def mock_chat(message: str, topic_title: str) -> str:
     return (
         "Halo Adik hebat! 🌟\n\n"

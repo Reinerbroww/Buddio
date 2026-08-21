@@ -227,5 +227,69 @@ class BuddioAI:
             logger.warning("Gemini quiz failed, falling back to mock: %s", exc)
             return mock_ai.mock_quiz(topic_title, count), "mock"
 
+    def generate_lesson(
+        self,
+        step_title: str,
+        topic_title: str,
+        grade_level: str = "sma",
+        step_description: str = "",
+    ) -> Tuple[dict, str]:
+        """Generate rich lesson content (materi) with YouTube video suggestions.
+
+        Returns (lesson_dict, mode) where lesson_dict has:
+            content: str   -- rich markdown materi
+            videos: list   -- [{"title": "...", "url": "...", "description": "..."}]
+        """
+        if not _is_gemini_available():
+            return mock_ai.mock_lesson(step_title, topic_title), "mock"
+
+        prompt = (
+            f"Buatkan materi pembelajaran lengkap untuk langkah belajar \"{step_title}\" "
+            f"dalam topik \"{topic_title}\" untuk jenjang {grade_level or 'sma'}.\n\n"
+            f"Deskripsi langkah: {step_description or '-'}\n\n"
+            "Kembalikan JSON dengan format:\n"
+            "{\n"
+            '  "content": "...",\n'
+            '  "videos": [\n'
+            '    {"title": "Judul Video", "url": "https://www.youtube.com/watch?v=VIDEO_ID", "description": "Deskripsi singkat"}\n'
+            "  ]\n"
+            "}\n\n"
+            "UNTUK CONTENT (materi inti):\n"
+            "Tulis materi pembelajaran yang KAYA, TERSTRUKTUR, dan MENARIK dalam Bahasa Indonesia. "
+            "Gunakan markdown dengan format:\n"
+            "## Penjelasan Konsep\n"
+            "Jelaskan konsep secara mendalam, bertahap, dan mudah dipahami.\n\n"
+            "## Poin-Poin Penting\n"
+            "Bullet points berisi istilah penting dan definisinya.\n\n"
+            "## Contoh\n"
+            "Berikan 2-3 contoh konkret dengan penjelasan langkah demi langkah.\n\n"
+            "## Contoh Soal\n"
+            "Buat 2-3 contoh soal beserta pembahasan lengkap.\n\n"
+            "## Ringkasan Materi\n"
+            "Rangkum poin-poin utama dalam beberapa kalimat.\n\n"
+            "UNTUK VIDEOS:\n"
+            "Cari dan masukkan 3-4 URL video YouTube yang RELEVAN dengan topik ini. "
+            "Gunakan format URL: https://www.youtube.com/watch?v=VIDEO_ID\n"
+            "Jika tidak yakin dengan URL spesifik, gunakan URL pencarian YouTube: "
+            "https://www.youtube.com/results?search_query=kata+kunci+pencarian\n"
+            "Pastikan setiap video memiliki judul dan deskripsi singkat.\n\n"
+            "Sesuaikan kedalaman materi dengan jenjang pendidikan: "
+            f"{grade_level or 'sma'}."
+        )
+
+        lesson_sys_prompt = (
+            "Kamu adalah Buddio, mentor belajar AI yang ahli menyusun materi pembelajaran "
+            "yang terstruktur, menarik, dan mudah dipahami dalam Bahasa Indonesia."
+        )
+
+        try:
+            data = _generate_json(prompt, max_tokens=4096, system_instruction=lesson_sys_prompt)
+            data.setdefault("content", "")
+            data.setdefault("videos", [])
+            return data, "gemini"
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Gemini lesson failed, falling back to mock: %s", exc)
+            return mock_ai.mock_lesson(step_title, topic_title), "mock"
+
 
 buddio_ai = BuddioAI()

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useCallback, useEffect, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -17,6 +17,10 @@ import {
   Play,
   ExternalLink,
   RefreshCw,
+  Maximize2,
+  Minimize2,
+  StickyNote,
+  Save,
 } from "lucide-react";
 import api, { ApiError } from "@/services/api";
 import type { Lesson } from "@/lib/types";
@@ -103,6 +107,75 @@ function extractYouTubeId(url: string): string | null {
   return null;
 }
 
+function NotesPanel({ lessonId, onClose }: { lessonId: number; onClose: () => void }) {
+  const [notes, setNotes] = useState("");
+  const [saved, setSaved] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const storageKey = `buddio_notes_${lessonId}`;
+
+  useEffect(() => {
+    const stored = localStorage.getItem(storageKey);
+    if (stored) setNotes(stored);
+  }, [storageKey]);
+
+  const handleChange = (value: string) => {
+    setNotes(value);
+    setSaved(false);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      localStorage.setItem(storageKey, value);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    }, 800);
+  };
+
+  const handleSaveNow = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    localStorage.setItem(storageKey, notes);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-white shrink-0">
+        <div className="flex items-center gap-2">
+          <StickyNote className="w-4 h-4 text-[#7C5CFF]" />
+          <h3 className="font-bold text-slate-900 text-sm">Catatan Belajar</h3>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleSaveNow}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-semibold text-[#4F8EF7] bg-[#4F8EF7]/8 hover:bg-[#4F8EF7]/15 rounded-lg transition-colors"
+          >
+            <Save className="w-3 h-3" />
+            {saved ? "Tersimpan!" : "Simpan"}
+          </button>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+          >
+            <Minimize2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+      <div className="flex-1 p-4 overflow-hidden">
+        <textarea
+          value={notes}
+          onChange={(e) => handleChange(e.target.value)}
+          placeholder="Tulis catatan belajarmu di sini...&#10;&#10;Contoh:&#10;- Poin penting yang harus diingat&#10;- Pertanyaan untuk ditanyakan ke Kak Buddio&#10;- Ringkasan versi sendiri"
+          className="w-full h-full resize-none text-sm text-slate-700 leading-relaxed bg-slate-50 border border-slate-100 rounded-xl p-4 outline-none focus:border-[#4F8EF7] focus:bg-white transition-all placeholder-slate-400"
+        />
+      </div>
+      <div className="px-4 py-2 border-t border-slate-100 bg-slate-50/50 shrink-0">
+        <p className="text-[10px] text-slate-400 text-center">
+          Catatan tersimpan otomatis di browser ini ({notes.length} karakter)
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function MateriPageContent() {
   const params = useParams();
   const router = useRouter();
@@ -113,6 +186,8 @@ function MateriPageContent() {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [completing, setCompleting] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
 
   const loadLesson = useCallback(async () => {
     if (!lessonId) return;
@@ -131,6 +206,17 @@ function MateriPageContent() {
   useEffect(() => {
     loadLesson();
   }, [loadLesson]);
+
+  useEffect(() => {
+    if (fullscreen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [fullscreen]);
 
   const handleGenerateContent = async () => {
     if (!lesson || generating) return;
@@ -197,43 +283,13 @@ function MateriPageContent() {
 
   if (!lesson) return null;
 
-  return (
-    <div className="max-w-3xl mx-auto py-6 sm:py-8 space-y-8 animate-in fade-in duration-300">
+  const MateriBody = (
+    <>
       {error && (
         <div className="text-xs bg-rose-50 border border-rose-200 text-rose-600 rounded-xl px-4 py-3">
           {error}
         </div>
       )}
-
-      <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-6">
-        <div className="space-y-1.5 min-w-0">
-          <button
-            onClick={() => router.back()}
-            className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-400 hover:text-slate-700 transition-colors cursor-pointer mb-2"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Kembali ke Roadmap
-          </button>
-          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-            {lesson.step_title}
-          </h2>
-          <p className="text-xs text-slate-500">
-            Topik: {lesson.topic_title}
-          </p>
-        </div>
-        <button
-          onClick={handleComplete}
-          disabled={completing}
-          className="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-gradient-to-r from-[#22C55E] to-emerald-400 rounded-xl shadow-md hover:scale-[1.02] transition-all duration-300 disabled:opacity-50"
-        >
-          {completing ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <CheckCircle2 className="w-4 h-4" />
-          )}
-          Selesai
-        </button>
-      </div>
 
       {!hasRichContent && !generating ? (
         <div className="bg-white border border-slate-100 rounded-2xl p-6 sm:p-8 text-center space-y-5">
@@ -275,9 +331,7 @@ function MateriPageContent() {
               </div>
               <div>
                 <h3 className="font-extrabold text-slate-900 text-sm">Materi Inti</h3>
-                <p className="text-[11px] text-slate-400">
-                  {lesson.source ?? "AI Buddio"}
-                </p>
+                <p className="text-[11px] text-slate-400">{lesson.source ?? "AI Buddio"}</p>
               </div>
             </div>
             <div className="prose-sm max-w-none">
@@ -384,6 +438,111 @@ function MateriPageContent() {
           </div>
         </>
       )}
+    </>
+  );
+
+  if (fullscreen) {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col bg-[#F8FAFC]">
+        <div className="flex items-center justify-between px-6 py-3 bg-white border-b border-slate-200 shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              onClick={() => setFullscreen(false)}
+              className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+            >
+              <Minimize2 className="w-3.5 h-3.5" />
+              Keluar Fullscreen
+            </button>
+            <div className="w-px h-4 bg-slate-200" />
+            <h1 className="text-sm font-extrabold text-slate-900 truncate">{lesson.step_title}</h1>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => setShowNotes(!showNotes)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold rounded-lg transition-all duration-200 ${
+                showNotes
+                  ? "text-white bg-[#7C5CFF] shadow-md shadow-[#7C5CFF]/15"
+                  : "text-[#7C5CFF] bg-[#7C5CFF]/8 hover:bg-[#7C5CFF]/15 border border-[#7C5CFF]/20"
+              }`}
+            >
+              <StickyNote className="w-3.5 h-3.5" />
+              Catatan
+            </button>
+            <button
+              onClick={handleComplete}
+              disabled={completing}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold text-white bg-gradient-to-r from-[#22C55E] to-emerald-400 rounded-lg shadow-md hover:scale-[1.02] transition-all duration-300 disabled:opacity-50"
+            >
+              {completing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+              Selesai
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-1 min-h-0">
+          <div
+            className={`flex-1 overflow-y-auto transition-all duration-300 ${
+              showNotes ? "pr-0" : ""
+            }`}
+          >
+            <div className={`mx-auto py-6 space-y-6 ${showNotes ? "max-w-2xl px-6" : "max-w-3xl px-6"}`}>
+              {MateriBody}
+            </div>
+          </div>
+
+          {showNotes && (
+            <div className="w-[380px] shrink-0 border-l border-slate-200 bg-white animate-in slide-in-from-right duration-300">
+              <NotesPanel lessonId={lessonId} onClose={() => setShowNotes(false)} />
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-3xl mx-auto py-6 sm:py-8 space-y-8 animate-in fade-in duration-300">
+      <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-6">
+        <div className="space-y-1.5 min-w-0">
+          <button
+            onClick={() => router.back()}
+            className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-400 hover:text-slate-700 transition-colors cursor-pointer mb-2"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Kembali ke Roadmap
+          </button>
+          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+            {lesson.step_title}
+          </h2>
+          <p className="text-xs text-slate-500">Topik: {lesson.topic_title}</p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => {
+              setFullscreen(true);
+              setShowNotes(true);
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold text-[#4F8EF7] bg-[#4F8EF7]/8 hover:bg-[#4F8EF7]/15 border border-[#4F8EF7]/20 rounded-xl transition-all duration-200"
+          >
+            <Maximize2 className="w-4 h-4" />
+            <span className="hidden sm:inline">Fullscreen</span>
+          </button>
+          <button
+            onClick={handleComplete}
+            disabled={completing}
+            className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-gradient-to-r from-[#22C55E] to-emerald-400 rounded-xl shadow-md hover:scale-[1.02] transition-all duration-300 disabled:opacity-50"
+          >
+            {completing ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <CheckCircle2 className="w-4 h-4" />
+            )}
+            Selesai
+          </button>
+        </div>
+      </div>
+
+      {MateriBody}
     </div>
   );
 }

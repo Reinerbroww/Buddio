@@ -32,6 +32,14 @@ interface HighlightableContentProps {
   enabled?: boolean;
 }
 
+function getMarkRect(markEl: HTMLElement): { x: number; y: number } {
+  const r = markEl.getBoundingClientRect();
+  return {
+    x: Math.min(r.left, window.innerWidth - 300),
+    y: r.bottom + 8,
+  };
+}
+
 export default function HighlightableContent({
   content,
   highlights,
@@ -44,10 +52,39 @@ export default function HighlightableContent({
 }: HighlightableContentProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [popup, setPopup] = useState<{ x: number; y: number; text: string } | null>(null);
-  const [card, setCard] = useState<{ highlight: HighlightData; x: number; y: number } | null>(null);
-  const appliedIdsRef = useRef<Set<string>>(new Set());
+  const [activeHighlightId, setActiveHighlightId] = useState<string | null>(null);
+  const [cardPos, setCardPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const posRafRef = useRef<number>(0);
 
   const html = useMemo(() => mdToHtml(content), [content]);
+
+  const activeHighlight = useMemo(
+    () => (activeHighlightId ? highlights.find((h) => h.id === activeHighlightId) ?? null : null),
+    [activeHighlightId, highlights]
+  );
+
+  const recalcCardPos = useCallback(() => {
+    if (!activeHighlightId) return;
+    const markEl = containerRef.current?.querySelector(`[${MARK_ATTR}="${activeHighlightId}"]`) as HTMLElement | null;
+    if (!markEl) return;
+    setCardPos(getMarkRect(markEl));
+  }, [activeHighlightId]);
+
+  useEffect(() => {
+    if (!activeHighlightId) return;
+    recalcCardPos();
+    const onScroll = () => {
+      cancelAnimationFrame(posRafRef.current);
+      posRafRef.current = requestAnimationFrame(recalcCardPos);
+    };
+    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", onScroll);
+      cancelAnimationFrame(posRafRef.current);
+    };
+  }, [activeHighlightId, recalcCardPos]);
 
   const applyHighlights = useCallback(() => {
     const container = containerRef.current;
@@ -109,19 +146,12 @@ export default function HighlightableContent({
         e.preventDefault();
         e.stopPropagation();
         const id = el.getAttribute(MARK_ATTR);
-        const h = highlights.find((x) => x.id === id);
-        if (!h) return;
-        const rect = (el as HTMLElement).getBoundingClientRect();
-        setCard({
-          highlight: h,
-          x: Math.min(rect.left, window.innerWidth - 300),
-          y: rect.bottom + 8,
-        });
+        if (!id) return;
+        setActiveHighlightId(id);
+        setCardPos(getMarkRect(el as HTMLElement));
         setPopup(null);
       });
     });
-
-    appliedIdsRef.current = currentIds;
   }, [highlights]);
 
   useEffect(() => {
@@ -142,7 +172,7 @@ export default function HighlightableContent({
       if (text.length < 2) return;
 
       const rect = range.getBoundingClientRect();
-      setCard(null);
+      setActiveHighlightId(null);
       setPopup({
         x: Math.min(rect.left + rect.width / 2, window.innerWidth - 300),
         y: rect.top - 10,
@@ -161,8 +191,13 @@ export default function HighlightableContent({
     [popup, onAdd]
   );
 
+  const closeAll = useCallback(() => {
+    setPopup(null);
+    setActiveHighlightId(null);
+  }, []);
+
   return (
-    <div className={`relative ${className}`} onClick={() => { setPopup(null); setCard(null); }}>
+    <div className={`relative ${className}`} onClick={closeAll}>
       <div
         ref={containerRef}
         onMouseUp={handleMouseUp}
@@ -186,19 +221,19 @@ export default function HighlightableContent({
         </div>
       )}
 
-      {card && (
+      {activeHighlight && (
         <div
           className="fixed z-[60] animate-in fade-in zoom-in-95 duration-150"
-          style={{ top: card.y, left: card.x }}
+          style={{ top: cardPos.y, left: cardPos.x }}
           onMouseUp={(e) => e.stopPropagation()}
           onClick={(e) => e.stopPropagation()}
         >
           <HighlightCard
-            highlight={card.highlight}
+            highlight={activeHighlight}
             onUpdateNote={onUpdateNote}
             onUpdateColor={onUpdateColor}
             onRemove={onRemove}
-            onClose={() => setCard(null)}
+            onClose={() => setActiveHighlightId(null)}
           />
         </div>
       )}

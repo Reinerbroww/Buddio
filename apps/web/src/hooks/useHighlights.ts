@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import type { HighlightData, HighlightColor } from "@/lib/highlight-types";
 
 const STORAGE_PREFIX = "buddio_highlights_";
@@ -9,19 +9,18 @@ function getStorageKey(lessonId: number): string {
   return `${STORAGE_PREFIX}${lessonId}`;
 }
 
-export function useHighlights(lessonId: number) {
-  const [highlights, setHighlights] = useState<HighlightData[]>([]);
-
-  useEffect(() => {
+function readHighlights(lessonId: number): HighlightData[] {
+  if (typeof window === "undefined") return [];
+  try {
     const raw = localStorage.getItem(getStorageKey(lessonId));
-    if (raw) {
-      try {
-        setHighlights(JSON.parse(raw));
-      } catch {
-        setHighlights([]);
-      }
-    }
-  }, [lessonId]);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function useHighlights(lessonId: number) {
+  const [highlights, setHighlights] = useState<HighlightData[]>(() => readHighlights(lessonId));
 
   const persist = useCallback(
     (data: HighlightData[]) => {

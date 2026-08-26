@@ -81,10 +81,22 @@ export default function AssessmentPage() {
   }, []);
 
   useEffect(() => {
-    if (selectedTopicId != null) {
-      loadQuizzes(selectedTopicId);
-    }
-  }, [selectedTopicId, loadQuizzes]);
+    if (selectedTopicId == null) return;
+    let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- loading state before async is fine
+    setLoadingQuizzes(true);
+    api
+      .get<Quiz[]>(`/quiz/topic/${selectedTopicId}`)
+      .then((data) => { if (!cancelled) setQuizzes(data); })
+      .catch((err) => {
+        if (!cancelled) {
+          setQuizzes([]);
+          setError(err instanceof ApiError ? err.message : "Gagal memuat daftar kuis.");
+        }
+      })
+      .finally(() => { if (!cancelled) setLoadingQuizzes(false); });
+    return () => { cancelled = true; };
+  }, [selectedTopicId]);
 
   const activeQuestions = activeQuiz?.questions ?? [];
   const answeredCount = activeQuestions.filter((q) => answers[q.id] !== undefined).length;

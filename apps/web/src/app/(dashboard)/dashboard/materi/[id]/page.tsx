@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useCallback, useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -40,15 +40,13 @@ function extractYouTubeId(url: string): string | null {
 }
 
 function NotesPanel({ lessonId, onClose }: { lessonId: number; onClose: () => void }) {
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return localStorage.getItem(`buddio_notes_${lessonId}`) ?? "";
+  });
   const [saved, setSaved] = useState(false);
   const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const storageKey = `buddio_notes_${lessonId}`;
-
-  useEffect(() => {
-    const stored = localStorage.getItem(storageKey);
-    if (stored) setNotes(stored);
-  }, [storageKey]);
 
   const handleChange = (value: string) => {
     setNotes(value);
@@ -124,23 +122,22 @@ function MateriPageContent() {
 
   const { highlights, addHighlight, updateNote, updateColor, removeHighlight } = useHighlights(lessonId);
 
-  const loadLesson = useCallback(async () => {
-    if (!lessonId) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await api.get<Lesson>(`/lessons/${lessonId}`);
-      setLesson(data);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Gagal memuat materi.");
-    } finally {
-      setLoading(false);
-    }
-  }, [lessonId]);
-
   useEffect(() => {
-    loadLesson();
-  }, [loadLesson]);
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await api.get<Lesson>(`/lessons/${lessonId}`);
+        if (!cancelled) setLesson(data);
+      } catch (err) {
+        if (!cancelled) setError(err instanceof ApiError ? err.message : "Gagal memuat materi.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [lessonId]);
 
   useEffect(() => {
     if (fullscreen) {

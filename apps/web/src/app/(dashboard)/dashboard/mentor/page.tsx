@@ -41,10 +41,12 @@ function MentorPageContent() {
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const loadTopics = useCallback(() => {
+  useEffect(() => {
+    let cancelled = false;
     api
       .get<Topic[]>("/topics")
       .then((t) => {
+        if (cancelled) return;
         setTopics(t);
         if (t.length === 0) {
           setSelectedTopicId(null);
@@ -55,35 +57,34 @@ function MentorPageContent() {
         }
       })
       .catch((err) => {
-        setError(err instanceof ApiError ? err.message : "Gagal memuat topik.");
+        if (!cancelled) setError(err instanceof ApiError ? err.message : "Gagal memuat topik.");
       })
-      .finally(() => setLoadingTopics(false));
+      .finally(() => { if (!cancelled) setLoadingTopics(false); });
+    return () => { cancelled = true; };
   }, [topicParam]);
 
   useEffect(() => {
-    loadTopics();
-  }, [loadTopics]);
-
-  const loadHistory = useCallback((topicId: number) => {
+    if (selectedTopicId == null) return;
+    let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- loading state before async is fine
     setLoadingHistory(true);
     api
-      .get<ChatHistory[]>(`/mentor/history/${topicId}`)
+      .get<ChatHistory[]>(`/mentor/history/${selectedTopicId}`)
       .then((history) => {
+        if (cancelled) return;
         const sorted = [...history].sort((a, b) => a.id - b.id);
         const latest = sorted.length > 0 ? sorted[sorted.length - 1] : null;
         setMessages(latest ? latest.messages : []);
       })
       .catch((err) => {
-        setError(err instanceof ApiError ? err.message : "Gagal memuat riwayat chat.");
-        setMessages([]);
+        if (!cancelled) {
+          setError(err instanceof ApiError ? err.message : "Gagal memuat riwayat chat.");
+          setMessages([]);
+        }
       })
-      .finally(() => setLoadingHistory(false));
-  }, []);
-
-  useEffect(() => {
-    if (selectedTopicId == null) return;
-    loadHistory(selectedTopicId);
-  }, [selectedTopicId, loadHistory]);
+      .finally(() => { if (!cancelled) setLoadingHistory(false); });
+    return () => { cancelled = true; };
+  }, [selectedTopicId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -316,7 +317,7 @@ function MentorPageContent() {
                         a: (props) => <a className="text-[#4F8EF7] hover:underline font-semibold" target="_blank" rel="noopener noreferrer" {...props} />,
                         blockquote: (props) => <blockquote className="border-l-4 border-slate-200 pl-3 italic my-2 text-slate-500 bg-slate-50/50 py-1 pr-2 rounded-r-lg" {...props} />,
                         pre: (props) => <pre className="block bg-slate-50 text-slate-800 p-3 rounded-xl text-xs font-mono border border-slate-100 overflow-x-auto my-3 max-w-full" {...props} />,
-                        code: ({ className, children, ...props }: any) => {
+                        code: ({ className, children, ...props }: React.ComponentProps<"code">) => {
                           const isBlock = className?.includes("language-");
                           return isBlock ? (
                             <code className="font-mono text-xs" {...props}>{children}</code>

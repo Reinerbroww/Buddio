@@ -1,7 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { marked } from "marked";
+import { marked, type Tokens } from "marked";
+
+type TokenText = { text: string };
+
+function tokenText(token: unknown): string {
+  if (token && typeof token === "object" && "text" in token) return (token as TokenText).text;
+  return "";
+}
 import type { HighlightData, HighlightColor } from "@/lib/highlight-types";
 import { HIGHLIGHT_COLORS } from "@/lib/highlight-types";
 import HighlightPopup from "./HighlightPopup";
@@ -49,7 +56,8 @@ function renderCalloutHTML(type: string, body: string): string {
 }
 
 class MateriRenderer extends marked.Renderer {
-  heading({ text, depth }: { text: string; depth: number; raw: string }): string {
+  heading({ tokens, depth }: Tokens.Heading): string {
+    const text = tokens.map(tokenText).join("");
     const tag = `h${depth}`;
     if (depth === 2) {
       return `<${tag} class="materi-h2 text-lg font-extrabold text-slate-900 mt-10 mb-4 first:mt-0 flex items-center gap-2">${text}</${tag}>`;
@@ -60,43 +68,48 @@ class MateriRenderer extends marked.Renderer {
     return `<${tag} class="text-sm font-bold text-slate-700 mt-4 mb-2">${text}</${tag}>`;
   }
 
-  paragraph({ text }: { text: string }): string {
-    if (typeof text === "string" && text.startsWith("<div class=")) return text;
+  paragraph({ tokens }: Tokens.Paragraph): string {
+    const text = tokens.map(tokenText).join("");
+    if (text.startsWith("<div class=")) return text;
     return `<p class="mb-3 last:mb-0 leading-relaxed text-sm text-slate-700">${text}</p>`;
   }
 
-  blockquote({ text }: { tokens: any[]; text: string }): string {
-    const raw = typeof text === "string" ? text : "";
+  blockquote({ tokens }: Tokens.Blockquote): string {
+    const raw = typeof tokens === "string" ? tokens : (tokens as unknown as Array<unknown>).map(tokenText).join("\n");
     const callout = parseCallout(raw);
     if (callout) return renderCalloutHTML(callout.type, callout.body);
-    return `<blockquote class="border-l-4 border-[#4F8EF7] pl-4 italic my-4 text-slate-600 bg-[#4F8EF7]/5 py-3 pr-4 rounded-r-xl text-sm">${text}</blockquote>`;
+    return `<blockquote class="border-l-4 border-[#4F8EF7] pl-4 italic my-4 text-slate-600 bg-[#4F8EF7]/5 py-3 pr-4 rounded-r-xl text-sm">${raw}</blockquote>`;
   }
 
-  list({ items, ordered }: { items: any[]; ordered: boolean }): string {
+  list(token: Tokens.List): string {
+    const { items, ordered } = token;
     const tag = ordered ? "ol" : "ul";
     const cls = ordered
       ? "list-decimal pl-6 mb-4 space-y-2"
       : "list-disc pl-6 mb-4 space-y-2";
-    const body = items.map((item: any) => {
-      const taskCheckbox = item.text.match(/^\[([ x])\]\s*/);
+    const body = items.map((item: Tokens.ListItem) => {
+      const itemText = item.tokens.map(tokenText).join("");
+      const taskCheckbox = itemText.match(/^\[([ x])\]\s*/);
       if (taskCheckbox) {
         const checked = taskCheckbox[1] === "x";
-        const content = item.text.replace(/^\[[ x]\]\s*/, "");
+        const content = itemText.replace(/^\[[ x]\]\s*/, "");
         return `<li class="flex items-start gap-2 text-sm text-slate-700">
           <span class="mt-0.5 w-4 h-4 rounded border ${checked ? "bg-[#4F8EF7] border-[#4F8EF7] text-white flex items-center justify-center text-[10px]" : "border-slate-300 bg-white"} shrink-0">${checked ? "✓" : ""}</span>
           <span>${content}</span>
         </li>`;
       }
-      return `<li class="text-sm text-slate-700 leading-relaxed">${item.text}</li>`;
+      return `<li class="text-sm text-slate-700 leading-relaxed">${itemText}</li>`;
     }).join("\n");
     return `<${tag} class="${cls}">${body}</${tag}>`;
   }
 
-  strong({ text }: { text: string }): string {
+  strong({ tokens }: Tokens.Strong): string {
+    const text = tokens.map(tokenText).join("");
     return `<strong class="font-extrabold text-slate-900">${text}</strong>`;
   }
 
-  em({ text }: { text: string }): string {
+  em({ tokens }: Tokens.Em): string {
+    const text = tokens.map(tokenText).join("");
     return `<em class="italic text-slate-600">${text}</em>`;
   }
 
@@ -113,21 +126,28 @@ class MateriRenderer extends marked.Renderer {
     return `<div class="materi-code block bg-slate-900 text-slate-100 p-4 rounded-xl text-xs font-mono overflow-x-auto my-4 max-w-full border border-slate-800">${langLabel}<pre class="m-0 p-0 bg-transparent">${text}</pre></div>`;
   }
 
-  table({ header, rows }: { header: any[]; rows: any[][] }): string {
-    const head = header.map((h: any) => `<th class="px-4 py-2.5 text-left text-xs font-bold text-slate-600 bg-slate-50 border-b border-slate-200">${h.text}</th>`).join("");
-    const body = rows.map((row: any[]) => {
-      const cells = row.map((c: any) => `<td class="px-4 py-2.5 text-sm text-slate-700 border-b border-slate-100">${c.text}</td>`).join("");
+  table(token: Tokens.Table): string {
+    const head = token.header.map((h: Tokens.TableCell) => {
+      const text = h.tokens.map(tokenText).join("");
+      return `<th class="px-4 py-2.5 text-left text-xs font-bold text-slate-600 bg-slate-50 border-b border-slate-200">${text}</th>`;
+    }).join("");
+    const body = token.rows.map((row: Tokens.TableCell[]) => {
+      const cells = row.map((c: Tokens.TableCell) => {
+        const text = c.tokens.map(tokenText).join("");
+        return `<td class="px-4 py-2.5 text-sm text-slate-700 border-b border-slate-100">${text}</td>`;
+      }).join("");
       return `<tr class="hover:bg-slate-50/50 transition-colors">${cells}</tr>`;
     }).join("");
-    return `<div class="overflow-x-auto my-4"><table class="min-w-full text-sm border border-slate-200 rounded-xl overflow-hidden">${head}<tbody>${body}</tbody></table></div>`;
+    return `<div class="overflow-x-auto my-4"><table class="min-w-full text-sm border border-slate-200 rounded-xl overflow-hidden"><thead>${head}</thead><tbody>${body}</tbody></table></div>`;
   }
 
-  image({ href, title, text }: { href: string; title: string | null; text: string }): string {
+  image({ href, title, text }: Tokens.Image): string {
     return `<figure class="my-4"><img src="${href}" alt="${text}" class="rounded-xl w-full border border-slate-100" />${title ? `<figcaption class="text-xs text-slate-400 text-center mt-2">${title}</figcaption>` : ""}</figure>`;
   }
 
-  link({ href, text }: { href: string; title?: string | null; text: string; tokens?: any[] }): string {
-    return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-[#4F8EF7] font-semibold hover:underline">${text}</a>`;
+  link({ href, title, tokens }: Tokens.Link): string {
+    const text = tokens.map(tokenText).join("");
+    return `<a href="${href}"${title ? ` title="${title}"` : ""} target="_blank" rel="noopener noreferrer" class="text-[#4F8EF7] font-semibold hover:underline">${text}</a>`;
   }
 }
 
@@ -260,8 +280,9 @@ export default function HighlightableContent({
     }
 
     container.querySelectorAll(`[${MARK_ATTR}]`).forEach((el) => {
-      if ((el as any)._bindt) return;
-      (el as any)._bindt = true;
+      const marker = el as HTMLElement & { _bindt?: boolean };
+      if (marker._bindt) return;
+      marker._bindt = true;
       el.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();

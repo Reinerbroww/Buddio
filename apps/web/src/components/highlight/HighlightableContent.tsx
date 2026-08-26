@@ -133,7 +133,7 @@ export default function HighlightableContent({
         text,
       });
     }, 10);
-  }, []);
+  }, [enabled]);
 
   const handleHighlight = useCallback(
     (color: HighlightColor, note: string) => {

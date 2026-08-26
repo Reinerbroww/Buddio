@@ -141,7 +141,7 @@ def mock_lesson(step_title: str, topic_title: str) -> dict:
 
             f"> [!ingat]\n"
             f"> **WAJIB DIINGAT:** Pahami konsep ini benar-benar sebelum lanjut ke materi berikutnya. "
-            f>Jangan sampai lewat begitu saja!\n\n"
+            f">Jangan sampai lewat begitu saja!\n\n"
 
             f"---\n\n"
 
@@ -188,7 +188,7 @@ def mock_lesson(step_title: str, topic_title: str) -> dict:
             f"> - {step_title} adalah fondasi dari {topic_title}\n"
             f"> - Pahami konsepnya, jangan sekedar menghafal\n"
             f"> - Hubungkan dengan contoh nyata dalam kehidupan\n"
-            f%"> - Kerjakan latihan untuk memperkuat pemahaman\n\n"
+            f"> - Kerjakan latihan untuk memperkuat pemahaman\n\n"
 
             f"---\n\n"
 
@@ -210,8 +210,6 @@ def mock_lesson(step_title: str, topic_title: str) -> dict:
                 "url": f"https://www.youtube.com/results?search_query={step_title.replace(' ', '+')}+latihan+soal",
                 "description": f"Video latihan soal tentang {step_title}."
             },
-        ],
-    }
         ],
     }
 

@@ -97,6 +97,11 @@ body {
 .materi-callout {
   position: relative;
   overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.materi-callout:hover {
+  transform: translateX(2px);
 }
 
 .materi-callout::before {
@@ -112,6 +117,16 @@ body {
 
 .materi-callout p:last-child {
   margin-bottom: 0;
+}
+
+/* Learning objective callout — subtle inner glow */
+.materi-callout.bg-teal-50 {
+  background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+}
+
+/* Prerequisite callout — slightly muted */
+.materi-callout.bg-slate-50 {
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
 }
 
 /* Code blocks */
@@ -158,4 +173,10 @@ body {
 .materi-content[style*="crosshair"] ::selection {
   background-color: rgba(253, 224, 71, 0.5);
   color: inherit;
+}
+
+/* Numbered steps in examples — make them pop */
+.materi-content ol li::marker {
+  color: var(--primary);
+  font-weight: 700;
 }

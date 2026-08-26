@@ -29,6 +29,8 @@ const CALLOUT_TYPES: Record<string, { bg: string; border: string; icon: string; 
   contoh:    { bg: "bg-emerald-50", border: "border-emerald-400", icon: "📝", label: "Contoh" },
   perhatian: { bg: "bg-rose-50",    border: "border-rose-400",    icon: "⚠️", label: "Perhatian" },
   quiz:      { bg: "bg-indigo-50",  border: "border-indigo-400",  icon: "🎯", label: "Quiz" },
+  tujuan:    { bg: "bg-teal-50",    border: "border-teal-400",    icon: "🎯", label: "Tujuan Pembelajaran" },
+  prasyarat: { bg: "bg-slate-50",   border: "border-slate-400",   icon: "📋", label: "Prasyarat" },
 };
 
 function parseCallout(text: string): { type: string; body: string } | null {
@@ -93,8 +95,8 @@ class MateriRenderer extends marked.Renderer {
       if (taskCheckbox) {
         const checked = taskCheckbox[1] === "x";
         const content = itemText.replace(/^\[[ x]\]\s*/, "");
-        return `<li class="flex items-start gap-2 text-sm text-slate-700">
-          <span class="mt-0.5 w-4 h-4 rounded border ${checked ? "bg-[#4F8EF7] border-[#4F8EF7] text-white flex items-center justify-center text-[10px]" : "border-slate-300 bg-white"} shrink-0">${checked ? "✓" : ""}</span>
+        return `<li class="flex items-start gap-2.5 text-sm text-slate-700 leading-relaxed">
+          <span class="mt-0.5 w-5 h-5 rounded-md border-2 ${checked ? "bg-teal-500 border-teal-500 text-white flex items-center justify-center text-[10px]" : "border-slate-300 bg-white"} shrink-0 flex items-center justify-center font-bold text-[10px]">${checked ? "✓" : ""}</span>
           <span>${content}</span>
         </li>`;
       }

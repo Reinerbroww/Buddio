@@ -1,10 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-import rehypeKatex from "rehype-katex";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { marked } from "marked";
 import type { HighlightData, HighlightColor } from "@/lib/highlight-types";
 import { HIGHLIGHT_COLORS } from "@/lib/highlight-types";
 import HighlightPopup from "./HighlightPopup";
@@ -17,6 +14,12 @@ const COLOR_MAP: Record<HighlightColor, string> = {
   blue: "rgba(147, 197, 253, 0.4)",
   red: "rgba(252, 165, 165, 0.4)",
 };
+
+marked.setOptions({ gfm: true, breaks: true });
+
+function mdToHtml(md: string): string {
+  return marked.parse(md) as string;
+}
 
 interface HighlightableContentProps {
   content: string;
@@ -42,16 +45,24 @@ export default function HighlightableContent({
   const containerRef = useRef<HTMLDivElement>(null);
   const [popup, setPopup] = useState<{ x: number; y: number; text: string } | null>(null);
   const [card, setCard] = useState<{ highlight: HighlightData; x: number; y: number } | null>(null);
+  const appliedIdsRef = useRef<Set<string>>(new Set());
+
+  const html = useMemo(() => mdToHtml(content), [content]);
 
   const applyHighlights = useCallback(() => {
     const container = containerRef.current;
     if (!container) return;
 
+    const currentIds = new Set(highlights.map((h) => h.id));
+
     container.querySelectorAll(`[${MARK_ATTR}]`).forEach((el) => {
-      const parent = el.parentNode;
-      if (parent) {
-        parent.replaceChild(document.createTextNode(el.textContent || ""), el);
-        parent.normalize();
+      const id = el.getAttribute(MARK_ATTR);
+      if (!id || !currentIds.has(id)) {
+        const parent = el.parentNode;
+        if (parent) {
+          parent.replaceChild(document.createTextNode(el.textContent || ""), el);
+          parent.normalize();
+        }
       }
     });
 
@@ -60,6 +71,8 @@ export default function HighlightableContent({
     const sorted = [...highlights].sort((a, b) => b.text.length - a.text.length);
 
     for (const h of sorted) {
+      if (container.querySelector(`[${MARK_ATTR}="${h.id}"]`)) continue;
+
       const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
       let node: Text | null;
       while ((node = walker.nextNode() as Text | null)) {
@@ -90,6 +103,8 @@ export default function HighlightableContent({
     }
 
     container.querySelectorAll(`[${MARK_ATTR}]`).forEach((el) => {
+      if ((el as any)._bindt) return;
+      (el as any)._bindt = true;
       el.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -105,12 +120,13 @@ export default function HighlightableContent({
         setPopup(null);
       });
     });
+
+    appliedIdsRef.current = currentIds;
   }, [highlights]);
 
   useEffect(() => {
-    const t = setTimeout(applyHighlights, 50);
-    return () => clearTimeout(t);
-  }, [applyHighlights, content]);
+    applyHighlights();
+  }, [applyHighlights]);
 
   const handleMouseUp = useCallback(() => {
     if (!enabled) return;
@@ -147,51 +163,13 @@ export default function HighlightableContent({
 
   return (
     <div className={`relative ${className}`} onClick={() => { setPopup(null); setCard(null); }}>
-      <div ref={containerRef} onMouseUp={handleMouseUp} className={enabled ? "cursor-crosshair" : ""}>
-        <ReactMarkdown
-          remarkPlugins={[remarkGfm, remarkMath]}
-          rehypePlugins={[rehypeKatex]}
-          components={{
-            h2: (props) => (
-              <h2 className="text-lg font-extrabold text-slate-900 mt-8 mb-3 first:mt-0" {...props} />
-            ),
-            h3: (props) => (
-              <h3 className="text-base font-bold text-slate-800 mt-5 mb-2" {...props} />
-            ),
-            p: (props) => <p className="mb-3 last:mb-0 leading-relaxed text-sm text-slate-700" {...props} />,
-            strong: (props) => <strong className="font-extrabold text-slate-900" {...props} />,
-            em: (props) => <em className="italic text-slate-600" {...props} />,
-            ul: (props) => <ul className="list-disc pl-5 mb-3 space-y-1.5" {...props} />,
-            ol: (props) => <ol className="list-decimal pl-5 mb-3 space-y-1.5" {...props} />,
-            li: (props) => <li className="text-sm leading-relaxed text-slate-700" {...props} />,
-            blockquote: (props) => (
-              <blockquote className="border-l-4 border-[#4F8EF7] pl-4 italic my-3 text-slate-600 bg-[#4F8EF7]/5 py-2 pr-3 rounded-r-lg" {...props} />
-            ),
-            hr: (props) => <hr className="my-5 border-slate-200/60" {...props} />,
-            pre: (props) => (
-              <pre className="block bg-slate-50 text-slate-800 p-4 rounded-xl text-xs font-mono border border-slate-100 overflow-x-auto my-3 max-w-full" {...props} />
-            ),
-            code: ({ className: cn, children, ...props }: any) => {
-              const isBlock = cn?.includes("language-");
-              return isBlock ? (
-                <code className="font-mono text-xs" {...cn} {...props}>{children}</code>
-              ) : (
-                <code className="bg-slate-100 text-[#4F8EF7] px-1.5 py-0.5 rounded text-xs font-mono" {...props}>{children}</code>
-              );
-            },
-            table: (props) => (
-              <div className="overflow-x-auto my-3">
-                <table className="min-w-full text-sm border border-slate-200 rounded-xl overflow-hidden" {...props} />
-              </div>
-            ),
-            thead: (props) => <thead className="bg-slate-50" {...props} />,
-            th: (props) => <th className="px-4 py-2 text-left text-xs font-bold text-slate-600 border-b border-slate-200" {...props} />,
-            td: (props) => <td className="px-4 py-2 text-sm text-slate-700 border-b border-slate-100" {...props} />,
-          }}
-        >
-          {content}
-        </ReactMarkdown>
-      </div>
+      <div
+        ref={containerRef}
+        onMouseUp={handleMouseUp}
+        className={enabled ? "cursor-crosshair" : ""}
+        dangerouslySetInnerHTML={{ __html: html }}
+        style={{ lineHeight: "1.8" }}
+      />
 
       {popup && (
         <div

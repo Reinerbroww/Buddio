@@ -118,7 +118,7 @@ function MateriPageContent() {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [completing, setCompleting] = useState(false);
-  const [fullscreen, setMode Belajar] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [highlightMode, setHighlightMode] = useState(false);
 
@@ -385,7 +385,7 @@ function MateriPageContent() {
       <div className="fixed inset-0 z-50 flex flex-col bg-[#F8FAFC]">
         <div className="flex items-center justify-between px-6 py-3 bg-white border-b border-slate-200 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
-            <button onClick={() => setMode Belajar(false)} className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-400 hover:text-slate-700 transition-colors cursor-pointer">
+            <button onClick={() => setFullscreen(false)} className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-400 hover:text-slate-700 transition-colors cursor-pointer">
               <Minimize2 className="w-3.5 h-3.5" /> Keluar Mode Belajar
             </button>
             <div className="w-px h-4 bg-slate-200" />
@@ -452,7 +452,7 @@ function MateriPageContent() {
           >
             <Highlighter className="w-4 h-4" /> <span className="hidden sm:inline">{highlightMode ? "Highlight On" : "Highlight"}</span>
           </button>
-          <button onClick={() => { setMode Belajar(true); setShowNotes(true); }} className="inline-flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold text-[#4F8EF7] bg-[#4F8EF7]/8 hover:bg-[#4F8EF7]/15 border border-[#4F8EF7]/20 rounded-xl transition-all duration-200">
+          <button onClick={() => { setFullscreen(true); setShowNotes(true); }} className="inline-flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold text-[#4F8EF7] bg-[#4F8EF7]/8 hover:bg-[#4F8EF7]/15 border border-[#4F8EF7]/20 rounded-xl transition-all duration-200">
             <Maximize2 className="w-4 h-4" /> <span className="hidden sm:inline">Mode Belajar</span>
           </button>
           <button onClick={handleComplete} disabled={completing} className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-gradient-to-r from-[#22C55E] to-emerald-400 rounded-xl shadow-md hover:scale-[1.02] transition-all duration-300 disabled:opacity-50">

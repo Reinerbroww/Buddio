@@ -111,27 +111,88 @@ def mock_quiz(topic_title: str, count: int = 5) -> dict:
 def mock_lesson(step_title: str, topic_title: str) -> dict:
     return {
         "content": (
+            f"## Selamat Datang di Dunia {step_title}! 🚀\n\n"
+            f"Sebelum kita mulai, coba jawab pertanyaan ini dalam hati: "
+            f"**Apa yang terlintas di pikiranmu saat mendengar kata \"{step_title}\"?** "
+            f"Kalau belum yakin, tenang aja — setelah baca materi ini, kamu bakal paham banget!\n\n"
+
+            f"---\n\n"
+
             f"## Penjelasan Konsep\n\n"
-            f"Materi ini membahas tentang **{step_title}** dalam topik **{topic_title}**.\n\n"
-            f"Konsep dasar yang perlu dipahami adalah fondasi dari seluruh pembahasan ini. "
-            f"Dengan memahami {step_title}, kamu akan memiliki dasar yang kuat untuk langkah selanjutnya.\n\n"
+            f"Jadi, **{step_title}** itu sebenarnya adalah salah satu bagian terpenting dalam **{topic_title}**. "
+            f"Bayangin seperti fondasi rumah — kalau fondasinya kuat, rumahnya nggak akan goyang!\n\n"
+
+            f"> [!tip]\n"
+            f"> **Tips Belajar:** Coba hubungkan konsep ini dengan sesuatu yang kamu sukai. "
+            f"Contohnya, kalau kamu suka game, bayangin {step_title} seperti skill baru yang harus di-unlock sebelum naik level!\n\n"
+
+            f"### Kenapa Ini Penting?\n\n"
+            f"Pemahaman yang baik tentang {step_title} akan membantumu:\n"
+            f"- Memahami materi lanjutan dengan lebih mudah\n"
+            f"- Menyelesaikan soal-soal dengan lebih percaya diri\n"
+            f"- Menghubungkan teori dengan kehidupan nyata\n\n"
+
+            f"---\n\n"
+
             f"## Poin-Poin Penting\n\n"
-            f"- **Istilah Penting 1**: Definisi dan penjelasan singkat.\n"
-            f"- **Istilah Penting 2**: Hubungan dengan konsep lain dalam {topic_title}.\n"
-            f"- **Istilah Penting 3**: Penerapan dalam konteks nyata.\n\n"
-            f"## Contoh\n\n"
-            f"### Contoh 1\n"
-            f"Berikut adalah contoh penerapan {step_title} dalam kehidupan sehari-hari.\n\n"
-            f"### Contoh 2\n"
-            f"Lain kali, cobalah hubungkan konsep ini dengan pengalamanmu sendiri.\n\n"
-            f"## Contoh Soal\n\n"
-            f"**Soal 1**: Apa pengertian dari {step_title}?\n"
-            f"**Jawaban**: {step_title} adalah konsep penting dalam {topic_title} yang berfungsi sebagai fondasi.\n\n"
-            f"**Soal 2**: Sebutkan 2 manfaat mempelajari {step_title}.\n"
-            f"**Jawaban**: (1) Memahami konsep dasar, (2) Membangun fondasi untuk materi lanjutan.\n\n"
+            f"- **Konsep Utama:** {step_title} adalah fondasi dari {topic_title}\n"
+            f"- **Penerapan:** Sering muncul dalam ujian dan kehidupan sehari-hari\n"
+            f"- **Koneksi:** Berhubungan erat dengan materi sebelumnya dan sesudahnya\n\n"
+
+            f"> [!ingat]\n"
+            f"> **WAJIB DIINGAT:** Pahami konsep ini benar-benar sebelum lanjut ke materi berikutnya. "
+            f>Jangan sampai lewat begitu saja!\n\n"
+
+            f"---\n\n"
+
+            f"## Contoh Penerapan\n\n"
+
+            f"> [!contoh]\n"
+            f"> **Contoh 1 — Kehidupan Sehari-hari**\n"
+            f"> Bayangkan kamu sedang memasak. {step_title} itu seperti resep yang harus diikuti langkah demi langkah. "
+            f"Kalau ada yang terlewat, hasilnya bisa berbeda!\n\n"
+
+            f"> [!contoh]\n"
+            f"> **Contoh 2 — Analogi Game**\n"
+            f"> Dalam game, kamu harus menguasai skill dasar dulu sebelum bisa pakai skill ultimate. "
+            f"Sama seperti {step_title} — kuasai ini, dan materi berikutnya jadi lebih gampang!\n\n"
+
+            f"---\n\n"
+
+            f"> [!funfact]\n"
+            f"> **Fakta Unik:** Tahukah kamu? Banyak ilmuwan besar memulai dari konsep dasar yang sederhana. "
+            f"Yang membedakan mereka adalah keinginan untuk benar-benar MEMAHAMI, bukan sekedar menghafal!\n\n"
+
+            f"---\n\n"
+
+            f"## Latihan Mandiri\n\n"
+
+            f"> [!quiz]\n"
+            f"> **Soal 1:** Apa pengertian singkat dari {step_title}?\n"
+            f"> **Soal 2:** Sebutkan 2 manfaat mempelajari {step_title}.\n"
+            f"> **Soal 3:** Berikan contoh penerapan {step_title} dalam kehidupan nyata.\n\n"
+
+            f"Klik untuk melihat jawaban ↓\n\n"
+
+            f"**Jawaban:**\n"
+            f"1. {step_title} adalah konsep dasar dalam {topic_title} yang menjadi fondasi pemahaman.\n"
+            f"2. (1) Membantu memahami materi lanjutan, (2) Berguna untuk ujian dan kehidupan nyata.\n"
+            f"3. Contoh: [siswa dapat menulis contoh berdasarkan pemahamannya sendiri].\n\n"
+
+            f"---\n\n"
+
             f"## Ringkasan Materi\n\n"
-            f"Secara singkat, {step_title} adalah bagian penting dari {topic_title} yang harus dikuasai "
-            f"sebelum melangkah ke langkah berikutnya. Pahami konsepnya, kerjakan latihannya, dan jangan ragu untuk bertanya!"
+
+            f"> [!ingat]\n"
+            f"> **Yang Perlu Kamu Ingat:**\n"
+            f"> - {step_title} adalah fondasi dari {topic_title}\n"
+            f"> - Pahami konsepnya, jangan sekedar menghafal\n"
+            f"> - Hubungkan dengan contoh nyata dalam kehidupan\n"
+            f%"> - Kerjakan latihan untuk memperkuat pemahaman\n\n"
+
+            f"---\n\n"
+
+            f"**Semangat belajar! 💪 Ingat, setiap ahli pernah jadi pemula. Yang penting terus berusaha!**"
         ),
         "videos": [
             {
@@ -148,7 +209,9 @@ def mock_lesson(step_title: str, topic_title: str) -> dict:
                 "title": f"Latihan Soal {step_title}",
                 "url": f"https://www.youtube.com/results?search_query={step_title.replace(' ', '+')}+latihan+soal",
                 "description": f"Video latihan soal tentang {step_title}."
-            }
+            },
+        ],
+    }
         ],
     }
 

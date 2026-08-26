@@ -15,7 +15,127 @@ const COLOR_MAP: Record<HighlightColor, string> = {
   red: "rgba(252, 165, 165, 0.4)",
 };
 
-marked.setOptions({ gfm: true, breaks: true });
+const CALLOUT_TYPES: Record<string, { bg: string; border: string; icon: string; label: string }> = {
+  tip:       { bg: "bg-blue-50",    border: "border-blue-400",    icon: "💡", label: "Tips" },
+  funfact:   { bg: "bg-purple-50",  border: "border-purple-400",  icon: "✨", label: "Fakta Unik" },
+  ingat:     { bg: "bg-amber-50",   border: "border-amber-400",   icon: "🧠", label: "Wajib Diingat" },
+  contoh:    { bg: "bg-emerald-50", border: "border-emerald-400", icon: "📝", label: "Contoh" },
+  perhatian: { bg: "bg-rose-50",    border: "border-rose-400",    icon: "⚠️", label: "Perhatian" },
+  quiz:      { bg: "bg-indigo-50",  border: "border-indigo-400",  icon: "🎯", label: "Quiz" },
+};
+
+function parseCallout(text: string): { type: string; body: string } | null {
+  const m = text.match(/^\s*>\s*\[!(\w+)\]\s*\n?([\s\S]*)/);
+  if (!m) return null;
+  const type = m[1].toLowerCase();
+  if (!CALLOUT_TYPES[type]) return null;
+  const body = m[2]
+    .split("\n")
+    .map((l) => l.replace(/^\s*>\s?/, ""))
+    .join("\n")
+    .trim();
+  return { type, body };
+}
+
+function renderCalloutHTML(type: string, body: string): string {
+  const cfg = CALLOUT_TYPES[type];
+  return `<div class="materi-callout ${cfg.bg} border-l-4 ${cfg.border} rounded-r-xl px-5 py-4 my-5">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="text-lg">${cfg.icon}</span>
+      <span class="text-xs font-extrabold uppercase tracking-wider text-slate-600">${cfg.label}</span>
+    </div>
+    <div class="text-sm text-slate-700 leading-relaxed space-y-1">${marked.parse(body) as string}</div>
+  </div>`;
+}
+
+class MateriRenderer extends marked.Renderer {
+  heading({ text, depth }: { text: string; depth: number; raw: string }): string {
+    const tag = `h${depth}`;
+    if (depth === 2) {
+      return `<${tag} class="materi-h2 text-lg font-extrabold text-slate-900 mt-10 mb-4 first:mt-0 flex items-center gap-2">${text}</${tag}>`;
+    }
+    if (depth === 3) {
+      return `<${tag} class="materi-h3 text-base font-bold text-slate-800 mt-6 mb-3 flex items-center gap-1.5">${text}</${tag}>`;
+    }
+    return `<${tag} class="text-sm font-bold text-slate-700 mt-4 mb-2">${text}</${tag}>`;
+  }
+
+  paragraph({ text }: { text: string }): string {
+    if (typeof text === "string" && text.startsWith("<div class=")) return text;
+    return `<p class="mb-3 last:mb-0 leading-relaxed text-sm text-slate-700">${text}</p>`;
+  }
+
+  blockquote({ text }: { tokens: any[]; text: string }): string {
+    const raw = typeof text === "string" ? text : "";
+    const callout = parseCallout(raw);
+    if (callout) return renderCalloutHTML(callout.type, callout.body);
+    return `<blockquote class="border-l-4 border-[#4F8EF7] pl-4 italic my-4 text-slate-600 bg-[#4F8EF7]/5 py-3 pr-4 rounded-r-xl text-sm">${text}</blockquote>`;
+  }
+
+  list({ items, ordered }: { items: any[]; ordered: boolean }): string {
+    const tag = ordered ? "ol" : "ul";
+    const cls = ordered
+      ? "list-decimal pl-6 mb-4 space-y-2"
+      : "list-disc pl-6 mb-4 space-y-2";
+    const body = items.map((item: any) => {
+      const taskCheckbox = item.text.match(/^\[([ x])\]\s*/);
+      if (taskCheckbox) {
+        const checked = taskCheckbox[1] === "x";
+        const content = item.text.replace(/^\[[ x]\]\s*/, "");
+        return `<li class="flex items-start gap-2 text-sm text-slate-700">
+          <span class="mt-0.5 w-4 h-4 rounded border ${checked ? "bg-[#4F8EF7] border-[#4F8EF7] text-white flex items-center justify-center text-[10px]" : "border-slate-300 bg-white"} shrink-0">${checked ? "✓" : ""}</span>
+          <span>${content}</span>
+        </li>`;
+      }
+      return `<li class="text-sm text-slate-700 leading-relaxed">${item.text}</li>`;
+    }).join("\n");
+    return `<${tag} class="${cls}">${body}</${tag}>`;
+  }
+
+  strong({ text }: { text: string }): string {
+    return `<strong class="font-extrabold text-slate-900">${text}</strong>`;
+  }
+
+  em({ text }: { text: string }): string {
+    return `<em class="italic text-slate-600">${text}</em>`;
+  }
+
+  hr(): string {
+    return `<hr class="my-8 border-0 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />`;
+  }
+
+  codespan({ text }: { text: string }): string {
+    return `<code class="bg-slate-100 text-[#4F8EF7] px-1.5 py-0.5 rounded text-xs font-mono">${text}</code>`;
+  }
+
+  code({ text, lang }: { text: string; lang?: string }): string {
+    const langLabel = lang ? `<div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">${lang}</div>` : "";
+    return `<div class="materi-code block bg-slate-900 text-slate-100 p-4 rounded-xl text-xs font-mono overflow-x-auto my-4 max-w-full border border-slate-800">${langLabel}<pre class="m-0 p-0 bg-transparent">${text}</pre></div>`;
+  }
+
+  table({ header, rows }: { header: any[]; rows: any[][] }): string {
+    const head = header.map((h: any) => `<th class="px-4 py-2.5 text-left text-xs font-bold text-slate-600 bg-slate-50 border-b border-slate-200">${h.text}</th>`).join("");
+    const body = rows.map((row: any[]) => {
+      const cells = row.map((c: any) => `<td class="px-4 py-2.5 text-sm text-slate-700 border-b border-slate-100">${c.text}</td>`).join("");
+      return `<tr class="hover:bg-slate-50/50 transition-colors">${cells}</tr>`;
+    }).join("");
+    return `<div class="overflow-x-auto my-4"><table class="min-w-full text-sm border border-slate-200 rounded-xl overflow-hidden">${head}<tbody>${body}</tbody></table></div>`;
+  }
+
+  image({ href, title, text }: { href: string; title: string | null; text: string }): string {
+    return `<figure class="my-4"><img src="${href}" alt="${text}" class="rounded-xl w-full border border-slate-100" />${title ? `<figcaption class="text-xs text-slate-400 text-center mt-2">${title}</figcaption>` : ""}</figure>`;
+  }
+
+  link({ href, text }: { href: string; title?: string | null; text: string; tokens?: any[] }): string {
+    return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-[#4F8EF7] font-semibold hover:underline">${text}</a>`;
+  }
+}
+
+marked.setOptions({
+  gfm: true,
+  breaks: true,
+  renderer: new MateriRenderer(),
+});
 
 function mdToHtml(md: string): string {
   return marked.parse(md) as string;
@@ -127,7 +247,7 @@ export default function HighlightableContent({
           mark.style.backgroundColor = COLOR_MAP[h.color];
           mark.style.borderRadius = "3px";
           mark.style.cursor = "pointer";
-          mark.style.transition = "filter 0.15s";
+          mark.style.transition = "filter 0.15s, outline 0.15s";
           mark.style.padding = "1px 0";
           mark.style.borderBottom = `2px solid ${COLOR_MAP[h.color].replace("0.4", "0.8")}`;
           mark.title = h.note || HIGHLIGHT_COLORS[h.color].label;
@@ -201,7 +321,7 @@ export default function HighlightableContent({
       <div
         ref={containerRef}
         onMouseUp={handleMouseUp}
-        className={enabled ? "cursor-crosshair" : ""}
+        className={`materi-content ${enabled ? "cursor-crosshair" : ""}`}
         dangerouslySetInnerHTML={{ __html: html }}
         style={{ lineHeight: "1.8" }}
       />

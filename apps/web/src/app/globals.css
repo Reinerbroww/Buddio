@@ -64,3 +64,98 @@ body {
   background-color: var(--primary);
   color: #ffffff;
 }
+
+/* ── Materi Content ─────────────────────────────────────── */
+
+.materi-content {
+  font-size: 14px;
+}
+
+.materi-content h2 {
+  position: relative;
+}
+
+.materi-content h2::before {
+  content: "";
+  position: absolute;
+  left: -16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 70%;
+  background: linear-gradient(to bottom, var(--primary), var(--secondary));
+  border-radius: 4px;
+}
+
+.materi-h3::before {
+  content: "▸";
+  color: var(--primary);
+  font-size: 14px;
+}
+
+/* Callout boxes */
+.materi-callout {
+  position: relative;
+  overflow: hidden;
+}
+
+.materi-callout::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(circle at top right, rgba(0, 0, 0, 0.03), transparent 70%);
+  pointer-events: none;
+}
+
+.materi-callout p:last-child {
+  margin-bottom: 0;
+}
+
+/* Code blocks */
+.materi-code pre {
+  white-space: pre;
+}
+
+.materi-code code {
+  color: #e2e8f0;
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
+}
+
+/* Blockquote fallback (non-callout) */
+.materi-content blockquote:not(.materi-callout) {
+  position: relative;
+}
+
+.materi-content blockquote:not(.materi-callout)::before {
+  content: "💬";
+  position: absolute;
+  left: -28px;
+  top: 4px;
+  font-size: 14px;
+  opacity: 0.6;
+}
+
+/* Links */
+.materi-content a {
+  position: relative;
+}
+
+.materi-content a::after {
+  content: "↗";
+  font-size: 10px;
+  vertical-align: super;
+  margin-left: 1px;
+  opacity: 0.5;
+}
+
+/* Highlight mode cursor feedback */
+.materi-content[style*="crosshair"] ::selection {
+  background-color: rgba(253, 224, 71, 0.5);
+  color: inherit;
+}

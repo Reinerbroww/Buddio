@@ -120,6 +120,7 @@ function MateriPageContent() {
   const [completing, setCompleting] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
+  const [highlightMode, setHighlightMode] = useState(false);
 
   const { highlights, addHighlight, updateNote, updateColor, removeHighlight } = useHighlights(lessonId);
 
@@ -256,10 +257,17 @@ function MateriPageContent() {
                   <p className="text-[11px] text-slate-400">{lesson.source ?? "AI Buddio"}</p>
                 </div>
               </div>
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-400 bg-slate-50 border border-slate-100 px-2 py-1 rounded-lg">
+              <button
+                onClick={() => setHighlightMode(!highlightMode)}
+                className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg transition-all duration-200 ${
+                  highlightMode
+                    ? "text-amber-700 bg-amber-100 border border-amber-200 shadow-sm"
+                    : "text-slate-400 bg-slate-50 border border-slate-100 hover:text-slate-600 hover:bg-slate-100"
+                }`}
+              >
                 <Highlighter className="w-3 h-3" />
-                Block teks untuk highlight
-              </span>
+                {highlightMode ? "Mode Aktif — Blok teks" : "Aktifkan Highlight"}
+              </button>
             </div>
             <HighlightableContent
               content={lesson.content ?? ""}
@@ -268,6 +276,7 @@ function MateriPageContent() {
               onUpdateNote={updateNote}
               onUpdateColor={updateColor}
               onRemove={removeHighlight}
+              enabled={highlightMode}
             />
           </div>
 
@@ -354,6 +363,16 @@ function MateriPageContent() {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button
+              onClick={() => setHighlightMode(!highlightMode)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold rounded-lg transition-all duration-200 ${
+                highlightMode
+                  ? "text-amber-700 bg-amber-100 border border-amber-200 shadow-sm"
+                  : "text-amber-600 bg-amber-50 hover:bg-amber-100 border border-amber-100"
+              }`}
+            >
+              <Highlighter className="w-3.5 h-3.5" /> {highlightMode ? "Highlight On" : "Highlight"}
+            </button>
+            <button
               onClick={() => setShowNotes(!showNotes)}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold rounded-lg transition-all duration-200 ${
                 showNotes ? "text-white bg-[#7C5CFF] shadow-md shadow-[#7C5CFF]/15" : "text-[#7C5CFF] bg-[#7C5CFF]/8 hover:bg-[#7C5CFF]/15 border border-[#7C5CFF]/20"
@@ -393,6 +412,16 @@ function MateriPageContent() {
           <p className="text-xs text-slate-500">Topik: {lesson.topic_title}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => setHighlightMode(!highlightMode)}
+            className={`inline-flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold rounded-xl transition-all duration-200 ${
+              highlightMode
+                ? "text-amber-700 bg-amber-100 border border-amber-200 shadow-sm"
+                : "text-slate-500 bg-slate-50 border border-slate-200 hover:text-slate-700 hover:bg-slate-100"
+            }`}
+          >
+            <Highlighter className="w-4 h-4" /> <span className="hidden sm:inline">{highlightMode ? "Highlight On" : "Highlight"}</span>
+          </button>
           <button onClick={() => { setFullscreen(true); setShowNotes(true); }} className="inline-flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold text-[#4F8EF7] bg-[#4F8EF7]/8 hover:bg-[#4F8EF7]/15 border border-[#4F8EF7]/20 rounded-xl transition-all duration-200">
             <Maximize2 className="w-4 h-4" /> <span className="hidden sm:inline">Fullscreen</span>
           </button>

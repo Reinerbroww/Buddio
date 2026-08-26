@@ -26,6 +26,7 @@ interface HighlightableContentProps {
   onUpdateColor: (id: string, color: HighlightColor) => void;
   onRemove: (id: string) => void;
   className?: string;
+  enabled?: boolean;
 }
 
 export default function HighlightableContent({
@@ -36,6 +37,7 @@ export default function HighlightableContent({
   onUpdateColor,
   onRemove,
   className = "",
+  enabled = true,
 }: HighlightableContentProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [popup, setPopup] = useState<{ x: number; y: number; text: string } | null>(null);
@@ -111,6 +113,7 @@ export default function HighlightableContent({
   }, [applyHighlights, content]);
 
   const handleMouseUp = useCallback(() => {
+    if (!enabled) return;
     setTimeout(() => {
       const sel = window.getSelection();
       if (!sel || sel.isCollapsed || !sel.rangeCount) return;
@@ -144,7 +147,7 @@ export default function HighlightableContent({
 
   return (
     <div className={`relative ${className}`} onClick={() => { setPopup(null); setCard(null); }}>
-      <div ref={containerRef} onMouseUp={handleMouseUp}>
+      <div ref={containerRef} onMouseUp={handleMouseUp} className={enabled ? "cursor-crosshair" : ""}>
         <ReactMarkdown
           remarkPlugins={[remarkGfm, remarkMath]}
           rehypePlugins={[rehypeKatex]}

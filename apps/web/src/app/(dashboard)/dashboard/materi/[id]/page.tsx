@@ -181,6 +181,20 @@ function MateriPageContent() {
     router.push(`/dashboard/mentor?topic=${lesson.topic_id ?? ""}&prompt=${encodeURIComponent(ctx)}`);
   };
 
+  const scrollToHighlight = (color: string) => {
+    const h = highlights.find((x) => x.color === color);
+    if (!h) return;
+    const el = document.querySelector(`[data-highlight-id="${h.id}"]`) as HTMLElement | null;
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.style.transition = "outline 0.2s";
+    el.style.outline = `3px solid ${color === "yellow" ? "#f59e0b" : color === "green" ? "#22c55e" : color === "blue" ? "#3b82f6" : "#ef4444"}`;
+    el.style.outlineOffset = "2px";
+    setTimeout(() => {
+      el.style.outline = "none";
+    }, 1500);
+  };
+
   const hasRichContent = lesson?.content && (lesson.content.includes("## ") || lesson.content.length > 500);
   const videos = lesson?.video_urls ?? [];
   const yellowCount = highlights.filter((h) => h.color === "yellow").length;
@@ -216,10 +230,26 @@ function MateriPageContent() {
       {highlights.length > 0 && (
         <div className="flex items-center gap-3 flex-wrap bg-white border border-slate-100 rounded-xl px-4 py-2.5">
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Highlight:</span>
-          {yellowCount > 0 && <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">{HIGHLIGHT_COLORS.yellow.emoji} {yellowCount}</span>}
-          {greenCount > 0 && <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">{HIGHLIGHT_COLORS.green.emoji} {greenCount}</span>}
-          {blueCount > 0 && <span className="text-[10px] font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">{HIGHLIGHT_COLORS.blue.emoji} {blueCount}</span>}
-          {redCount > 0 && <span className="text-[10px] font-semibold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full">{HIGHLIGHT_COLORS.red.emoji} {redCount}</span>}
+          {yellowCount > 0 && (
+            <button onClick={() => scrollToHighlight("yellow")} className="text-[10px] font-semibold text-amber-700 bg-amber-100 hover:bg-amber-200 px-2 py-0.5 rounded-full transition-colors cursor-pointer">
+              {HIGHLIGHT_COLORS.yellow.emoji} {yellowCount}
+            </button>
+          )}
+          {greenCount > 0 && (
+            <button onClick={() => scrollToHighlight("green")} className="text-[10px] font-semibold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-2 py-0.5 rounded-full transition-colors cursor-pointer">
+              {HIGHLIGHT_COLORS.green.emoji} {greenCount}
+            </button>
+          )}
+          {blueCount > 0 && (
+            <button onClick={() => scrollToHighlight("blue")} className="text-[10px] font-semibold text-blue-700 bg-blue-100 hover:bg-blue-200 px-2 py-0.5 rounded-full transition-colors cursor-pointer">
+              {HIGHLIGHT_COLORS.blue.emoji} {blueCount}
+            </button>
+          )}
+          {redCount > 0 && (
+            <button onClick={() => scrollToHighlight("red")} className="text-[10px] font-semibold text-rose-700 bg-rose-100 hover:bg-rose-200 px-2 py-0.5 rounded-full transition-colors cursor-pointer">
+              {HIGHLIGHT_COLORS.red.emoji} {redCount}
+            </button>
+          )}
         </div>
       )}
 

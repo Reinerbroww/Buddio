@@ -176,6 +176,7 @@ export default function HighlightableContent({
           className="fixed z-[60] animate-in fade-in zoom-in-95 duration-150"
           style={{ top: popup.y, left: popup.x }}
           onMouseUp={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
         >
           <HighlightPopup
             selectedText={popup.text}
@@ -190,6 +191,7 @@ export default function HighlightableContent({
           className="fixed z-[60] animate-in fade-in zoom-in-95 duration-150"
           style={{ top: card.y, left: card.x }}
           onMouseUp={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
         >
           <HighlightCard
             highlight={card.highlight}

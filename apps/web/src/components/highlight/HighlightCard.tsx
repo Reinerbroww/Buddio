@@ -6,7 +6,6 @@ import { HIGHLIGHT_COLORS, type HighlightData, type HighlightColor } from "@/lib
 
 interface HighlightCardProps {
   highlight: HighlightData;
-  position: { x: number; y: number };
   onUpdateNote: (id: string, note: string) => void;
   onUpdateColor: (id: string, color: HighlightColor) => void;
   onRemove: (id: string) => void;
@@ -15,7 +14,6 @@ interface HighlightCardProps {
 
 export default function HighlightCard({
   highlight,
-  position,
   onUpdateNote,
   onUpdateColor,
   onRemove,
@@ -31,11 +29,7 @@ export default function HighlightCard({
   };
 
   return (
-    <div
-      className="fixed z-[60] animate-in fade-in zoom-in-95 duration-150"
-      style={{ top: position.y, left: position.x }}
-    >
-      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 w-72 space-y-3">
+    <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 w-72 space-y-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5">
             <span className="text-sm">{cfg.emoji}</span>
@@ -131,6 +125,5 @@ export default function HighlightCard({
           {new Date(highlight.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
         </p>
       </div>
-    </div>
   );
 }

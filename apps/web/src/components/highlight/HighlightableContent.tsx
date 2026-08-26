@@ -194,7 +194,11 @@ export default function HighlightableContent({
       </div>
 
       {popup && (
-        <div className="fixed z-[60] animate-in fade-in zoom-in-95 duration-150" style={{ top: popup.y, left: popup.x }}>
+        <div
+          className="fixed z-[60] animate-in fade-in zoom-in-95 duration-150"
+          style={{ top: popup.y, left: popup.x }}
+          onMouseUp={(e) => e.stopPropagation()}
+        >
           <HighlightPopup
             selectedText={popup.text}
             onHighlight={handleHighlight}
@@ -204,14 +208,19 @@ export default function HighlightableContent({
       )}
 
       {card && (
-        <HighlightCard
-          highlight={card.highlight}
-          position={{ x: card.x, y: card.y }}
-          onUpdateNote={onUpdateNote}
-          onUpdateColor={onUpdateColor}
-          onRemove={onRemove}
-          onClose={() => setCard(null)}
-        />
+        <div
+          className="fixed z-[60] animate-in fade-in zoom-in-95 duration-150"
+          style={{ top: card.y, left: card.x }}
+          onMouseUp={(e) => e.stopPropagation()}
+        >
+          <HighlightCard
+            highlight={card.highlight}
+            onUpdateNote={onUpdateNote}
+            onUpdateColor={onUpdateColor}
+            onRemove={onRemove}
+            onClose={() => setCard(null)}
+          />
+        </div>
       )}
     </div>
   );

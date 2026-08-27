@@ -299,7 +299,7 @@ export default function HighlightableContent({
 
   useEffect(() => {
     applyHighlights();
-  }, [applyHighlights]);
+  }, [applyHighlights, html]);
 
   const handleMouseUp = useCallback(() => {
     if (!enabled) return;

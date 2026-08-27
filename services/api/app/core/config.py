@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     GEMINI_MODEL: str = "gemini-flash-lite-latest"
 
     # CORS - keep explicit in production.
-    CORS_ORIGINS: Annotated[List[str], NoDecode] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    CORS_ORIGINS: Annotated[List[str], NoDecode] = ["http://localhost:3000", "http://127.0.0.1:3000", "https://buddio-ai.vercel.app"]
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
 import {
   LayoutDashboard,
   BookOpen,
@@ -17,7 +18,9 @@ import {
   Search,
   Menu,
   X,
-  User
+  User,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 const GRADE_LABELS: Record<string, string> = {
@@ -76,7 +79,7 @@ const Logo = ({ collapsed = false }: { collapsed?: boolean }) => (
       </svg>
     </div>
     {!collapsed && (
-      <span className="text-xl font-bold text-slate-900 tracking-tight font-sans">
+      <span className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight font-sans">
         Buddio
       </span>
     )}
@@ -91,6 +94,7 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const router = useRouter();
   const { user, loading, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -104,7 +108,7 @@ export default function DashboardLayout({
 
   if (loading || !user) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+      <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0f172a] flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-[#4F8EF7] border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -146,21 +150,21 @@ export default function DashboardLayout({
               href={item.href}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group relative ${
                 isActive
-                  ? "bg-[#4F8EF7]/8 text-[#4F8EF7] font-semibold"
-                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                  ? "bg-[#4F8EF7]/8 dark:bg-[#60a5fa]/12 text-[#4F8EF7] dark:text-[#60a5fa] font-semibold"
+                  : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#1e293b] hover:text-slate-900 dark:hover:text-slate-100"
               } ${collapsed ? "justify-center px-0" : ""}`}
               onClick={() => setIsMobileOpen(false)}
             >
               <Icon
                 className={`w-5 h-5 shrink-0 transition-transform duration-200 group-hover:scale-105 ${
-                  isActive ? "text-[#4F8EF7]" : "text-slate-400 group-hover:text-slate-600"
+                  isActive ? "text-[#4F8EF7] dark:text-[#60a5fa]" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300"
                 }`}
               />
               {!collapsed && <span>{item.label}</span>}
 
               {/* Tooltip for tablet collapse */}
               {collapsed && (
-                <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-slate-900 text-white text-xs rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50 shadow-md">
+                <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-slate-900 dark:bg-[#0f172a] text-white text-xs rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50 shadow-md">
                   {item.label}
                 </div>
               )}
@@ -174,7 +178,7 @@ export default function DashboardLayout({
   // Profile bottom bar rendering logic
   const renderProfileSection = (collapsed = false) => {
     return (
-      <div className={`p-4 border-t border-slate-100 ${collapsed ? "flex flex-col items-center gap-4" : ""}`}>
+      <div className={`p-4 border-t border-slate-100 dark:border-[#334155] ${collapsed ? "flex flex-col items-center gap-4" : ""}`}>
         {/* User Card */}
         <div className={`flex items-center gap-3 ${collapsed ? "justify-center" : ""}`}>
           {/* Circular Avatar */}
@@ -185,8 +189,8 @@ export default function DashboardLayout({
 
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-slate-950 truncate">{displayName}</p>
-              <p className="text-xs text-slate-500 truncate">{gradeLabel}</p>
+              <p className="text-sm font-semibold text-slate-950 dark:text-slate-100 truncate">{displayName}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{gradeLabel}</p>
             </div>
           )}
         </div>
@@ -194,7 +198,7 @@ export default function DashboardLayout({
         {/* Logout Button */}
         <button
           onClick={logout}
-          className={`mt-3 w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-rose-500 hover:bg-rose-50 transition-colors ${
+          className={`mt-3 w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-rose-500 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors ${
             collapsed ? "justify-center px-0 mt-0 hover:bg-rose-50 rounded-full w-10 h-10" : ""
           }`}
           title="Keluar"
@@ -207,11 +211,11 @@ export default function DashboardLayout({
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex font-sans antialiased">
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0f172a] text-slate-900 dark:text-slate-100 flex font-sans antialiased transition-colors">
       {/* 1. Sidebar - Desktop & Tablet */}
-      <aside className="fixed top-0 bottom-0 left-0 z-30 bg-white border-r border-slate-100 flex flex-col justify-between transition-all duration-300 hidden sm:flex sm:w-20 lg:w-64">
+      <aside className="fixed top-0 bottom-0 left-0 z-30 bg-white dark:bg-[#1e293b] border-r border-slate-100 dark:border-[#334155] flex flex-col justify-between transition-all duration-300 hidden sm:flex sm:w-20 lg:w-64">
         {/* Top Header */}
-        <div className="h-16 flex items-center px-6 border-b border-slate-100 shrink-0">
+        <div className="h-16 flex items-center px-6 border-b border-slate-100 dark:border-[#334155] shrink-0">
           {/* On tablet show only the icon */}
           <div className="lg:hidden block">
             <Logo collapsed={true} />
@@ -247,16 +251,16 @@ export default function DashboardLayout({
         <>
           {/* Backdrop overlay */}
           <div
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 sm:hidden transition-opacity"
+            className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-xs z-40 sm:hidden transition-opacity"
             onClick={() => setIsMobileOpen(false)}
           />
           {/* Sliding drawer */}
-          <aside className="fixed top-0 bottom-0 left-0 w-64 bg-white z-50 shadow-xl flex flex-col justify-between sm:hidden animate-in slide-in-from-left duration-300">
-            <div className="h-16 flex items-center justify-between px-6 border-b border-slate-100 shrink-0">
+          <aside className="fixed top-0 bottom-0 left-0 w-64 bg-white dark:bg-[#1e293b] z-50 shadow-xl flex flex-col justify-between sm:hidden animate-in slide-in-from-left duration-300">
+            <div className="h-16 flex items-center justify-between px-6 border-b border-slate-100 dark:border-[#334155] shrink-0">
               <Logo collapsed={false} />
               <button
                 onClick={() => setIsMobileOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-colors"
+                className="p-1 rounded-lg text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-[#334155] hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -284,7 +288,7 @@ export default function DashboardLayout({
       {/* 3. Main Content Container */}
       <div className="flex-1 flex flex-col min-w-0 sm:pl-20 lg:pl-64 min-h-screen">
         {/* Sticky Header */}
-        <header className="sticky top-0 z-20 h-16 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-4 sm:px-6">
+        <header className="sticky top-0 z-20 h-16 bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-md border-b border-slate-100 dark:border-[#334155] flex items-center justify-between px-4 sm:px-6 transition-colors">
           {isMobileSearchOpen ? (
             <div className="flex-1 flex items-center gap-3 animate-in fade-in duration-200">
               <button
@@ -293,7 +297,7 @@ export default function DashboardLayout({
                   setSearchQuery("");
                   setIsSearchFocused(false);
                 }}
-                className="p-2 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-800 shrink-0 transition-colors"
+                className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#334155] hover:text-slate-800 dark:hover:text-slate-200 shrink-0 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -307,13 +311,13 @@ export default function DashboardLayout({
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setIsSearchFocused(true)}
                   placeholder="Cari topik atau materi..."
-                  className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 text-slate-800 border border-slate-100 rounded-xl outline-none focus:border-[#4F8EF7] focus:bg-white transition-all duration-200"
+                  className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 dark:bg-[#1e293b] text-slate-800 dark:text-slate-200 border border-slate-100 dark:border-[#334155] rounded-xl outline-none focus:border-[#4F8EF7] focus:bg-white dark:focus:bg-[#0f172a] transition-all duration-200"
                   autoFocus
                 />
 
                 {isSearchFocused && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-slate-100 shadow-lg py-3 z-30 animate-in fade-in slide-in-from-top-1 duration-200">
-                    <div className="px-4 pb-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-[#1e293b] rounded-2xl border border-slate-100 dark:border-[#334155] shadow-lg py-3 z-30 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <div className="px-4 pb-2 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                       {searchQuery ? "Hasil Pencarian" : "Topik Populer"}
                     </div>
                     <div className="space-y-1">
@@ -326,9 +330,9 @@ export default function DashboardLayout({
                               setIsSearchFocused(false);
                               setIsMobileSearchOpen(false);
                             }}
-                            className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"
+                            className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#334155] transition-colors flex items-center gap-2"
                           >
-                            <Search className="w-4 h-4 text-slate-400" />
+                            <Search className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                             {item}
                           </button>
                         ))
@@ -348,13 +352,13 @@ export default function DashboardLayout({
                 {/* Hamburger button for mobile */}
                 <button
                   onClick={() => setIsMobileOpen(true)}
-                  className="p-2 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-800 sm:hidden shrink-0 transition-colors"
+                  className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#334155] hover:text-slate-800 dark:hover:text-slate-200 sm:hidden shrink-0 transition-colors"
                 >
                   <Menu className="w-5 h-5" />
                 </button>
                 
                 {/* Dynamic Page Title */}
-                <h1 className="text-lg font-bold text-slate-900 font-sans tracking-tight">
+                <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100 font-sans tracking-tight">
                   {getPageTitle()}
                 </h1>
               </div>
@@ -376,12 +380,12 @@ export default function DashboardLayout({
                       setIsProfileMenuOpen(false);
                     }}
                     placeholder="Cari topik atau materi..."
-                    className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 hover:bg-slate-100/70 focus:bg-white text-slate-800 placeholder-slate-400 border border-slate-100 focus:border-[#4F8EF7] rounded-xl outline-none transition-all duration-200"
+                    className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 dark:bg-[#1e293b] hover:bg-slate-100/70 dark:hover:bg-[#334155] focus:bg-white dark:focus:bg-[#0f172a] text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 border border-slate-100 dark:border-[#334155] focus:border-[#4F8EF7] rounded-xl outline-none transition-all duration-200"
                   />
 
                   {isSearchFocused && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-slate-100 shadow-lg py-3 z-30 animate-in fade-in slide-in-from-top-1 duration-200">
-                      <div className="px-4 pb-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-[#1e293b] rounded-2xl border border-slate-100 dark:border-[#334155] shadow-lg py-3 z-30 animate-in fade-in slide-in-from-top-1 duration-200">
+                      <div className="px-4 pb-2 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                         {searchQuery ? "Hasil Pencarian" : "Topik Populer"}
                       </div>
                       <div className="space-y-1">
@@ -393,9 +397,9 @@ export default function DashboardLayout({
                                 setSearchQuery(item);
                                 setIsSearchFocused(false);
                               }}
-                              className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"
+                              className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#334155] transition-colors flex items-center gap-2"
                             >
-                              <Search className="w-4 h-4 text-slate-400" />
+                              <Search className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                               {item}
                             </button>
                           ))
@@ -412,9 +416,18 @@ export default function DashboardLayout({
                 {/* Mobile Search Button */}
                 <button
                   onClick={() => setIsMobileSearchOpen(true)}
-                  className="sm:hidden p-2 rounded-xl text-slate-500 hover:bg-slate-50 transition-colors"
+                  className="sm:hidden p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#334155] transition-colors"
                 >
                   <Search className="w-5 h-5" />
+                </button>
+
+                {/* Theme Toggle */}
+                <button
+                  onClick={toggleTheme}
+                  className="p-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#334155] hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
+                  title={theme === "dark" ? "Mode Terang" : "Mode Gelap"}
+                >
+                  {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                 </button>
 
                 {/* Notification Bell */}
@@ -427,19 +440,19 @@ export default function DashboardLayout({
                     }}
                     className={`relative p-2.5 rounded-xl transition-colors group ${
                       isNotificationOpen
-                        ? "bg-[#4F8EF7]/10 text-[#4F8EF7]"
-                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+                        ? "bg-[#4F8EF7]/10 dark:bg-[#60a5fa]/15 text-[#4F8EF7] dark:text-[#60a5fa]"
+                        : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#334155] hover:text-slate-800 dark:hover:text-slate-200"
                     }`}
                   >
                     <Bell className="w-5 h-5 transition-transform group-hover:rotate-12 duration-200" />
                     {/* Badge dot */}
-                    <span className="absolute top-2 right-2.5 w-2 h-2 bg-[#7C5CFF] rounded-full border border-white" />
+                    <span className="absolute top-2 right-2.5 w-2 h-2 bg-[#7C5CFF] rounded-full border border-white dark:border-[#1e293b]" />
                   </button>
 
                   {isNotificationOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl border border-slate-100 shadow-lg py-3 z-30 animate-in fade-in slide-in-from-top-1 duration-200">
-                      <div className="px-4 py-2 border-b border-slate-50 flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">Notifikasi</span>
+                    <div className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-[#1e293b] rounded-2xl border border-slate-100 dark:border-[#334155] shadow-lg py-3 z-30 animate-in fade-in slide-in-from-top-1 duration-200">
+                      <div className="px-4 py-2 border-b border-slate-50 dark:border-[#334155] flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">Notifikasi</span>
                         <button 
                           onClick={() => alert("Tandai semua dibaca (Dummy)")}
                           className="text-[10px] text-[#4F8EF7] hover:underline font-semibold"
@@ -447,38 +460,38 @@ export default function DashboardLayout({
                           Tandai dibaca semua
                         </button>
                       </div>
-                      <div className="max-h-72 overflow-y-auto divide-y divide-slate-50">
-                        <div className="p-4 hover:bg-slate-50 transition-colors flex gap-3">
+                      <div className="max-h-72 overflow-y-auto divide-y divide-slate-50 dark:divide-[#334155]">
+                        <div className="p-4 hover:bg-slate-50 dark:hover:bg-[#334155] transition-colors flex gap-3">
                           <div className="w-8 h-8 rounded-full bg-[#4F8EF7]/10 text-[#4F8EF7] flex items-center justify-center shrink-0">
                             <Sparkles className="w-4 h-4" />
                           </div>
                           <div className="space-y-1">
-                            <p className="text-xs text-slate-800 leading-normal">
+                            <p className="text-xs text-slate-800 dark:text-slate-200 leading-normal">
                               <strong>Roadmap Baru!</strong> AI Mentor menyusun peta belajar untuk Machine Learning. 🤖
                             </p>
-                            <span className="text-[10px] text-slate-400">10 menit yang lalu</span>
+                            <span className="text-[10px] text-slate-400 dark:text-slate-500">10 menit yang lalu</span>
                           </div>
                         </div>
-                        <div className="p-4 hover:bg-slate-50 transition-colors flex gap-3">
+                        <div className="p-4 hover:bg-slate-50 dark:hover:bg-[#334155] transition-colors flex gap-3">
                           <div className="w-8 h-8 rounded-full bg-[#22C55E]/10 text-[#22C55E] flex items-center justify-center shrink-0">
                             <ClipboardCheck className="w-4 h-4" />
                           </div>
                           <div className="space-y-1 flex-1">
-                            <p className="text-xs text-slate-800 leading-normal">
+                            <p className="text-xs text-slate-800 dark:text-slate-200 leading-normal">
                               <strong>Kuis Selesai!</strong> Kamu menyelesaikan Kuis Python Dasar dengan skor 90%. 🎉
                             </p>
-                            <span className="text-[10px] text-slate-400">2 jam yang lalu</span>
+                            <span className="text-[10px] text-slate-400 dark:text-slate-500">2 jam yang lalu</span>
                           </div>
                         </div>
-                        <div className="p-4 hover:bg-slate-50 transition-colors flex gap-3">
+                        <div className="p-4 hover:bg-slate-50 dark:hover:bg-[#334155] transition-colors flex gap-3">
                           <div className="w-8 h-8 rounded-full bg-[#7C5CFF]/10 text-[#7C5CFF] flex items-center justify-center shrink-0">
                             <BarChart3 className="w-4 h-4" />
                           </div>
                           <div className="space-y-1">
-                            <p className="text-xs text-slate-800 leading-normal">
+                            <p className="text-xs text-slate-800 dark:text-slate-200 leading-normal">
                               <strong>Pertahankan Streak!</strong> Belajar hari ini untuk menjaga 12 hari streak belajarmu. 🔥
                             </p>
-                            <span className="text-[10px] text-slate-400">5 jam yang lalu</span>
+                            <span className="text-[10px] text-slate-400 dark:text-slate-500">5 jam yang lalu</span>
                           </div>
                         </div>
                       </div>
@@ -495,50 +508,50 @@ export default function DashboardLayout({
                       setIsSearchFocused(false);
                     }}
                     className={`flex items-center justify-center p-0.5 rounded-full border-2 transition-colors shrink-0 ${
-                      isProfileMenuOpen ? "border-[#4F8EF7]" : "border-slate-100 hover:border-[#4F8EF7]"
+                      isProfileMenuOpen ? "border-[#4F8EF7]" : "border-slate-100 dark:border-[#334155] hover:border-[#4F8EF7]"
                     }`}
                   >
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-medium text-xs select-none">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-[#334155] text-slate-600 dark:text-slate-300 font-medium text-xs select-none">
                       <User className="w-4 h-4" />
                     </div>
                   </button>
 
                   {isProfileMenuOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl border border-slate-100 shadow-lg py-2 z-30 animate-in fade-in slide-in-from-top-1 duration-200">
-                      <div className="px-4 py-3 border-b border-slate-50 flex items-center gap-3">
+                    <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-[#1e293b] rounded-2xl border border-slate-100 dark:border-[#334155] shadow-lg py-2 z-30 animate-in fade-in slide-in-from-top-1 duration-200">
+                      <div className="px-4 py-3 border-b border-slate-50 dark:border-[#334155] flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#4F8EF7] to-[#7C5CFF] text-white flex items-center justify-center font-bold text-sm select-none shrink-0">
                           {initials}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-xs font-bold text-slate-900 truncate">{displayName}</p>
-                          <p className="text-[10px] text-slate-500 truncate">{gradeLabel}</p>
+                          <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{displayName}</p>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{gradeLabel}</p>
                         </div>
                       </div>
                       <div className="py-1">
                         <Link
                           href="/dashboard/profile"
                           onClick={() => setIsProfileMenuOpen(false)}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#334155] transition-colors"
                         >
-                          <User className="w-4 h-4 text-slate-400" />
+                          <User className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                           Profil Saya
                         </Link>
                         <Link
                           href="/dashboard/pengaturan"
                           onClick={() => setIsProfileMenuOpen(false)}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#334155] transition-colors"
                         >
-                          <Settings className="w-4 h-4 text-slate-400" />
+                          <Settings className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                           Pengaturan Akun
                         </Link>
                       </div>
-                      <div className="border-t border-slate-50 pt-1">
+                      <div className="border-t border-slate-50 dark:border-[#334155] pt-1">
                         <button
                           onClick={() => {
                             setIsProfileMenuOpen(false);
                             logout();
                           }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-rose-600 hover:bg-rose-50 transition-colors text-left"
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors text-left"
                         >
                           <LogOut className="w-4 h-4 text-rose-500" />
                           Logout

@@ -65,6 +65,35 @@ body {
   color: #ffffff;
 }
 
+/* ── Dark Mode Variables ──────────────────────────────── */
+
+.dark {
+  --background: #0f172a;
+  --foreground: #e2e8f0;
+
+  --surface: #1e293b;
+  --border: #334155;
+
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+
+  --primary: #60a5fa;
+  --primary-dark: #93bbfd;
+  --primary-foreground: #0f172a;
+
+  --secondary: #a78bfa;
+  --secondary-foreground: #0f172a;
+
+  --accent: #facc15;
+  --accent-foreground: #0f172a;
+
+  --success: #4ade80;
+  --warning: #fbbf24;
+  --danger: #f87171;
+
+  --ring: #60a5fa;
+}
+
 /* ── Materi Content ─────────────────────────────────────── */
 
 .materi-content {
@@ -179,4 +208,135 @@ body {
 .materi-content ol li::marker {
   color: var(--primary);
   font-weight: 700;
+}
+
+/* ── Dark Mode Component Overrides ────────────────────── */
+
+/* Sidebar */
+.dark .sidebar-nav-item-active {
+  background: rgba(96, 165, 250, 0.12);
+  color: var(--primary);
+}
+
+/* Materi content dark mode */
+.dark .materi-content h2 {
+  color: #f1f5f9;
+}
+
+.dark .materi-content h3 {
+  color: #e2e8f0;
+}
+
+.dark .materi-content p,
+.dark .materi-content li {
+  color: #cbd5e1;
+}
+
+.dark .materi-content strong {
+  color: #f8fafc;
+}
+
+.dark .materi-content em {
+  color: #94a3b8;
+}
+
+.dark .materi-callout {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: rgba(100, 116, 139, 0.4);
+}
+
+.dark .materi-callout.bg-blue-50 {
+  background: rgba(30, 58, 138, 0.25);
+}
+
+.dark .materi-callout.bg-purple-50 {
+  background: rgba(88, 28, 135, 0.25);
+}
+
+.dark .materi-callout.bg-amber-50 {
+  background: rgba(120, 53, 15, 0.25);
+}
+
+.dark .materi-callout.bg-emerald-50 {
+  background: rgba(6, 78, 59, 0.25);
+}
+
+.dark .materi-callout.bg-rose-50 {
+  background: rgba(136, 19, 55, 0.25);
+}
+
+.dark .materi-callout.bg-indigo-50 {
+  background: rgba(49, 46, 129, 0.25);
+}
+
+.dark .materi-callout.bg-teal-50 {
+  background: rgba(19, 78, 74, 0.25);
+}
+
+.dark .materi-callout.bg-slate-50 {
+  background: rgba(30, 41, 59, 0.6);
+}
+
+.dark .materi-callout .text-slate-600,
+.dark .materi-callout .text-slate-700 {
+  color: #cbd5e1;
+}
+
+.dark .materi-code {
+  background: #0c1222;
+  border-color: #1e293b;
+}
+
+.dark .materi-content a {
+  color: #60a5fa;
+}
+
+.dark .materi-content blockquote:not(.materi-callout) {
+  background: rgba(96, 165, 250, 0.06);
+  color: #94a3b8;
+}
+
+/* Table dark mode */
+.dark .materi-content thead th {
+  background: #1e293b;
+  color: #94a3b8;
+  border-color: #334155;
+}
+
+.dark .materi-content tbody td {
+  border-color: #1e293b;
+}
+
+.dark .materi-content tbody tr:hover {
+  background: rgba(30, 41, 59, 0.5);
+}
+
+/* Inline code dark mode */
+.dark .materi-content code:not(.materi-code code) {
+  background: rgba(30, 41, 59, 0.8);
+  color: #93c5fd;
+}
+
+/* Highlight marks dark mode */
+.dark mark[data-highlight-id] {
+  border-bottom-color: rgba(253, 224, 71, 0.7) !important;
+}
+
+/* Highlight card dark mode */
+.dark .highlight-card {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+/* Highlight popup dark mode */
+.dark .highlight-popup {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+/* HR dark mode */
+.dark .materi-content hr {
+  background: linear-gradient(to right, transparent, #334155, transparent);
 }

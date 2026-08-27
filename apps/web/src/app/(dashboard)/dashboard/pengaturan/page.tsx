@@ -4,10 +4,12 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Loader2, Settings as SettingsIcon, User as UserIcon, Lock, CheckCircle2, AlertCircle } from "lucide-react";
 import api, { ApiError } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
 import type { Settings, User } from "@/lib/types";
 
 export default function PengaturanPage() {
   const { user, loading } = useAuth();
+  const { theme: currentTheme, setTheme: setCurrentTheme } = useTheme();
 
   const [settingsLoading, setSettingsLoading] = useState(true);
   const [settingsInitial, setSettingsInitial] = useState<Settings | null>(null);
@@ -101,10 +103,15 @@ export default function PengaturanPage() {
     }
   };
 
+  const handleThemeChange = (newTheme: string) => {
+    setTheme(newTheme);
+    setCurrentTheme(newTheme as "light" | "dark");
+  };
+
   const inputClass =
-    "w-full px-4 py-3 text-sm bg-slate-50 border border-slate-100 focus:border-[#4F8EF7] focus:bg-white rounded-xl outline-none transition-all text-slate-900";
+    "w-full px-4 py-3 text-sm bg-slate-50 dark:bg-[#0f172a] border border-slate-100 dark:border-[#334155] focus:border-[#4F8EF7] focus:bg-white dark:focus:bg-[#0f172a] rounded-xl outline-none transition-all text-slate-900 dark:text-slate-200";
   const labelClass =
-    "text-[11px] font-bold text-slate-500 uppercase tracking-wider";
+    "text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider";
 
   if (loading || settingsLoading || !user) {
     return (
@@ -116,34 +123,34 @@ export default function PengaturanPage() {
 
   return (
     <div className="max-w-4xl mx-auto py-6 sm:py-8 space-y-8 animate-in fade-in duration-300">
-      <div className="space-y-1.5 border-b border-slate-100 pb-8">
-        <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight font-sans">
+      <div className="space-y-1.5 border-b border-slate-100 dark:border-[#334155] pb-8">
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight font-sans">
           Pengaturan
         </h2>
-        <p className="text-sm sm:text-base text-slate-500 font-sans">
+        <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 font-sans">
           Kelola preferensi aplikasi, informasi profil, dan keamanan akunmu.
         </p>
       </div>
 
-      <section className="bg-white border border-slate-100 rounded-2xl p-6 space-y-6 shadow-xs">
+      <section className="bg-white dark:bg-[#1e293b] border border-slate-100 dark:border-[#334155] rounded-2xl p-6 space-y-6 shadow-xs">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-[#4F8EF7]/10 flex items-center justify-center shrink-0">
             <SettingsIcon className="w-5 h-5 text-[#4F8EF7]" />
           </div>
           <div>
-            <h3 className="font-bold text-slate-900 text-sm">Pengaturan</h3>
-            <p className="text-[11px] text-slate-500">Atur preferensi tampilan dan kebiasaan belajarmu.</p>
+            <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm">Pengaturan</h3>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">Atur preferensi tampilan dan kebiasaan belajarmu.</p>
           </div>
         </div>
 
         {settingsError && (
-          <div className="flex items-center gap-2 text-xs bg-rose-50 border border-rose-200 text-rose-600 rounded-xl px-4 py-3">
+          <div className="flex items-center gap-2 text-xs bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 text-rose-600 dark:text-rose-400 rounded-xl px-4 py-3">
             <AlertCircle className="w-4 h-4 shrink-0" />
             {settingsError}
           </div>
         )}
         {settingsSuccess && (
-          <div className="flex items-center gap-2 text-xs bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-xl px-4 py-3">
+          <div className="flex items-center gap-2 text-xs bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 text-emerald-600 dark:text-emerald-400 rounded-xl px-4 py-3">
             <CheckCircle2 className="w-4 h-4 shrink-0" />
             {settingsSuccess}
           </div>
@@ -153,7 +160,7 @@ export default function PengaturanPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className={labelClass}>Tema</label>
-              <select value={theme} onChange={(e) => setTheme(e.target.value)} className={inputClass}>
+              <select value={theme} onChange={(e) => handleThemeChange(e.target.value)} className={inputClass}>
                 <option value="light">Light</option>
                 <option value="dark">Dark</option>
               </select>
@@ -169,8 +176,8 @@ export default function PengaturanPage() {
 
           <div className="space-y-1.5">
             <label className={labelClass}>Notifikasi</label>
-            <label className="flex items-center justify-between bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 cursor-pointer">
-              <span className="text-sm text-slate-600">Aktifkan notifikasi belajar</span>
+            <label className="flex items-center justify-between bg-slate-50 dark:bg-[#0f172a] border border-slate-100 dark:border-[#334155] rounded-xl px-4 py-3 cursor-pointer">
+              <span className="text-sm text-slate-600 dark:text-slate-300">Aktifkan notifikasi belajar</span>
               <input
                 type="checkbox"
                 checked={notification}
@@ -203,39 +210,39 @@ export default function PengaturanPage() {
         </form>
       </section>
 
-      <section className="bg-white border border-slate-100 rounded-2xl p-6 space-y-6 shadow-xs">
+      <section className="bg-white dark:bg-[#1e293b] border border-slate-100 dark:border-[#334155] rounded-2xl p-6 space-y-6 shadow-xs">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-[#7C5CFF]/10 flex items-center justify-center shrink-0">
             <UserIcon className="w-5 h-5 text-[#7C5CFF]" />
           </div>
           <div>
-            <h3 className="font-bold text-slate-900 text-sm">Profil</h3>
-            <p className="text-[11px] text-slate-500">Perbarui informasi dirimu agar pengalaman belajar lebih personal.</p>
+            <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm">Profil</h3>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">Perbarui informasi dirimu agar pengalaman belajar lebih personal.</p>
           </div>
         </div>
 
         <ProfileForm key={user.id} user={user} />
       </section>
 
-      <section className="bg-white border border-slate-100 rounded-2xl p-6 space-y-6 shadow-xs">
+      <section className="bg-white dark:bg-[#1e293b] border border-slate-100 dark:border-[#334155] rounded-2xl p-6 space-y-6 shadow-xs">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-[#F97316]/10 flex items-center justify-center shrink-0">
             <Lock className="w-5 h-5 text-[#F97316]" />
           </div>
           <div>
-            <h3 className="font-bold text-slate-900 text-sm">Ganti Password</h3>
-            <p className="text-[11px] text-slate-500">Amankan akunmu dengan password baru.</p>
+            <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm">Ganti Password</h3>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">Amankan akunmu dengan password baru.</p>
           </div>
         </div>
 
         {passwordError && (
-          <div className="flex items-center gap-2 text-xs bg-rose-50 border border-rose-200 text-rose-600 rounded-xl px-4 py-3">
+          <div className="flex items-center gap-2 text-xs bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 text-rose-600 dark:text-rose-400 rounded-xl px-4 py-3">
             <AlertCircle className="w-4 h-4 shrink-0" />
             {passwordError}
           </div>
         )}
         {passwordSuccess && (
-          <div className="flex items-center gap-2 text-xs bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-xl px-4 py-3">
+          <div className="flex items-center gap-2 text-xs bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 text-emerald-600 dark:text-emerald-400 rounded-xl px-4 py-3">
             <CheckCircle2 className="w-4 h-4 shrink-0" />
             {passwordSuccess}
           </div>
@@ -299,9 +306,9 @@ function ProfileForm({ user }: { user: User }) {
   const [success, setSuccess] = useState<string | null>(null);
 
   const inputClass =
-    "w-full px-4 py-3 text-sm bg-slate-50 border border-slate-100 focus:border-[#4F8EF7] focus:bg-white rounded-xl outline-none transition-all text-slate-900";
+    "w-full px-4 py-3 text-sm bg-slate-50 dark:bg-[#0f172a] border border-slate-100 dark:border-[#334155] focus:border-[#4F8EF7] focus:bg-white dark:focus:bg-[#0f172a] rounded-xl outline-none transition-all text-slate-900 dark:text-slate-200";
   const labelClass =
-    "text-[11px] font-bold text-slate-500 uppercase tracking-wider";
+    "text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider";
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -325,13 +332,13 @@ function ProfileForm({ user }: { user: User }) {
   return (
     <>
       {error && (
-        <div className="flex items-center gap-2 text-xs bg-rose-50 border border-rose-200 text-rose-600 rounded-xl px-4 py-3">
+        <div className="flex items-center gap-2 text-xs bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 text-rose-600 dark:text-rose-400 rounded-xl px-4 py-3">
           <AlertCircle className="w-4 h-4 shrink-0" />
           {error}
         </div>
       )}
       {success && (
-        <div className="flex items-center gap-2 text-xs bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-xl px-4 py-3">
+        <div className="flex items-center gap-2 text-xs bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 text-emerald-600 dark:text-emerald-400 rounded-xl px-4 py-3">
           <CheckCircle2 className="w-4 h-4 shrink-0" />
           {success}
         </div>

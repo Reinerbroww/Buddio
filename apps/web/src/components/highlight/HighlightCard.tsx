@@ -29,18 +29,18 @@ export default function HighlightCard({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 w-72 space-y-3">
+    <div className="bg-white dark:bg-[#1e293b] rounded-2xl shadow-2xl border border-slate-200 dark:border-[#334155] p-4 w-72 space-y-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5">
             <span className="text-sm">{cfg.emoji}</span>
-            <span className="text-[11px] font-bold text-slate-700">{cfg.label}</span>
+            <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200">{cfg.label}</span>
           </div>
-          <button onClick={onClose} className="p-0.5 rounded text-slate-300 hover:text-slate-500 transition-colors">
+          <button onClick={onClose} className="p-0.5 rounded text-slate-300 dark:text-slate-500 hover:text-slate-500 dark:hover:text-slate-300 transition-colors">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        <p className="text-xs text-slate-500 leading-relaxed line-clamp-3 bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
+        <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-3 bg-slate-50 dark:bg-[#0f172a] rounded-lg px-3 py-2 border border-slate-100 dark:border-[#334155]">
           &quot;{highlight.text}&quot;
         </p>
 
@@ -71,7 +71,7 @@ export default function HighlightCard({
               onChange={(e) => setNoteText(e.target.value)}
               autoFocus
               rows={2}
-              className="w-full resize-none text-xs text-slate-700 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 outline-none focus:border-[#4F8EF7] transition-colors"
+              className="w-full resize-none text-xs text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-[#0f172a] border border-slate-100 dark:border-[#334155] rounded-lg px-3 py-2 outline-none focus:border-[#4F8EF7] transition-colors"
             />
             <button
               onClick={handleSave}
@@ -83,7 +83,7 @@ export default function HighlightCard({
           </div>
         ) : highlight.note ? (
           <div className="space-y-2">
-            <p className="text-xs text-slate-600 leading-relaxed bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 rounded-lg px-3 py-2">
               {highlight.note}
             </p>
             <div className="flex gap-2">
@@ -121,7 +121,7 @@ export default function HighlightCard({
           </div>
         )}
 
-        <p className="text-[9px] text-slate-300 text-center">
+        <p className="text-[9px] text-slate-300 dark:text-slate-500 text-center">
           {new Date(highlight.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
         </p>
       </div>

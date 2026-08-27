@@ -17,11 +17,11 @@ export default function HighlightPopup({ selectedText, onHighlight, onClose }: H
   const truncated = selectedText.length > 80 ? selectedText.slice(0, 80) + "..." : selectedText;
 
   return (
-    <div className="fixed z-[60] animate-in fade-in zoom-in-95 duration-150" style={{ top: "var(--popup-y, 50%)", left: "var(--popup-x, 50%)" }}>
-      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 w-72 space-y-3">
+    <div className="fixed z-[60] animate-in fade-in zoom-in-95 duration-150" style={{ top: "var(--popup-y, 50%)", left: "var(--popup-x, 50%)", transform: "translate(-50%, 8px)" }}>
+      <div className="bg-white dark:bg-[#1e293b] rounded-2xl shadow-2xl border border-slate-200 dark:border-[#334155] p-4 w-72 space-y-3">
         <div className="flex items-start justify-between gap-2">
-          <p className="text-[10px] text-slate-400 leading-relaxed line-clamp-2 flex-1">&quot;{truncated}&quot;</p>
-          <button onClick={onClose} className="p-0.5 rounded text-slate-300 hover:text-slate-500 transition-colors shrink-0">
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed line-clamp-2 flex-1">&quot;{truncated}&quot;</p>
+          <button onClick={onClose} className="p-0.5 rounded text-slate-300 dark:text-slate-500 hover:text-slate-500 dark:hover:text-slate-300 transition-colors shrink-0">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -36,7 +36,7 @@ export default function HighlightPopup({ selectedText, onHighlight, onClose }: H
                 className={`flex flex-col items-center gap-1 py-2 rounded-xl border-2 transition-all duration-150 hover:scale-105 ${cfg.bg} ${cfg.border} hover:shadow-md cursor-pointer`}
               >
                 <span className="text-base">{cfg.emoji}</span>
-                <span className="text-[9px] font-bold text-slate-600 leading-tight">{cfg.label}</span>
+                <span className="text-[9px] font-bold text-slate-600 dark:text-slate-300 leading-tight">{cfg.label}</span>
               </button>
             );
           })}
@@ -58,9 +58,9 @@ export default function HighlightPopup({ selectedText, onHighlight, onClose }: H
               placeholder="Tulis catatanmu..."
               autoFocus
               rows={2}
-              className="w-full resize-none text-xs text-slate-700 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 outline-none focus:border-[#4F8EF7] transition-colors placeholder-slate-400"
+              className="w-full resize-none text-xs text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-[#0f172a] border border-slate-100 dark:border-[#334155] rounded-lg px-3 py-2 outline-none focus:border-[#4F8EF7] transition-colors placeholder-slate-400 dark:placeholder-slate-500"
             />
-            <p className="text-[9px] text-slate-400 text-center">Pilih warna di atas, catatan akan ikut tersimpan.</p>
+            <p className="text-[9px] text-slate-400 dark:text-slate-500 text-center">Pilih warna di atas, catatan akan ikut tersimpan.</p>
           </div>
         )}
       </div>

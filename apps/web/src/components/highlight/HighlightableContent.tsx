@@ -49,11 +49,7 @@ function parseCallout(text: string): { type: string; body: string } | null {
 function renderCalloutHTML(type: string, body: string): string {
   const cfg = CALLOUT_TYPES[type];
   return `<div class="materi-callout ${cfg.bg} border-l-4 ${cfg.border} rounded-r-xl px-5 py-4 my-5">
-    <div class="flex items-center gap-2 mb-2">
-      <span class="text-lg">${cfg.icon}</span>
-      <span class="text-xs font-extrabold uppercase tracking-wider text-slate-600">${cfg.label}</span>
-    </div>
-    <div class="text-sm text-slate-700 leading-relaxed space-y-1">${marked.parse(body) as string}</div>
+    <div class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed space-y-1">${marked.parse(body) as string}</div>
   </div>`;
 }
 
@@ -62,25 +58,25 @@ class MateriRenderer extends marked.Renderer {
     const text = tokens.map(tokenText).join("");
     const tag = `h${depth}`;
     if (depth === 2) {
-      return `<${tag} class="materi-h2 text-lg font-extrabold text-slate-900 mt-10 mb-4 first:mt-0 flex items-center gap-2">${text}</${tag}>`;
+      return `<${tag} class="materi-h2 text-lg font-extrabold text-slate-900 dark:text-slate-100 mt-10 mb-4 first:mt-0 flex items-center gap-2">${text}</${tag}>`;
     }
     if (depth === 3) {
-      return `<${tag} class="materi-h3 text-base font-bold text-slate-800 mt-6 mb-3 flex items-center gap-1.5">${text}</${tag}>`;
+      return `<${tag} class="materi-h3 text-base font-bold text-slate-800 dark:text-slate-200 mt-6 mb-3 flex items-center gap-1.5">${text}</${tag}>`;
     }
-    return `<${tag} class="text-sm font-bold text-slate-700 mt-4 mb-2">${text}</${tag}>`;
+    return `<${tag} class="text-sm font-bold text-slate-700 dark:text-slate-300 mt-4 mb-2">${text}</${tag}>`;
   }
 
   paragraph({ tokens }: Tokens.Paragraph): string {
     const text = tokens.map(tokenText).join("");
     if (text.startsWith("<div class=")) return text;
-    return `<p class="mb-3 last:mb-0 leading-relaxed text-sm text-slate-700">${text}</p>`;
+    return `<p class="mb-3 last:mb-0 leading-relaxed text-sm text-slate-700 dark:text-slate-300">${text}</p>`;
   }
 
   blockquote({ tokens }: Tokens.Blockquote): string {
     const raw = typeof tokens === "string" ? tokens : (tokens as unknown as Array<unknown>).map(tokenText).join("\n");
     const callout = parseCallout(raw);
     if (callout) return renderCalloutHTML(callout.type, callout.body);
-    return `<blockquote class="border-l-4 border-[#4F8EF7] pl-4 italic my-4 text-slate-600 bg-[#4F8EF7]/5 py-3 pr-4 rounded-r-xl text-sm">${raw}</blockquote>`;
+    return `<blockquote class="border-l-4 border-[#4F8EF7] pl-4 italic my-4 text-slate-600 dark:text-slate-400 bg-[#4F8EF7]/5 dark:bg-[#60a5fa]/10 py-3 pr-4 rounded-r-xl text-sm">${raw}</blockquote>`;
   }
 
   list(token: Tokens.List): string {
@@ -95,61 +91,61 @@ class MateriRenderer extends marked.Renderer {
       if (taskCheckbox) {
         const checked = taskCheckbox[1] === "x";
         const content = itemText.replace(/^\[[ x]\]\s*/, "");
-        return `<li class="flex items-start gap-2.5 text-sm text-slate-700 leading-relaxed">
-          <span class="mt-0.5 w-5 h-5 rounded-md border-2 ${checked ? "bg-teal-500 border-teal-500 text-white flex items-center justify-center text-[10px]" : "border-slate-300 bg-white"} shrink-0 flex items-center justify-center font-bold text-[10px]">${checked ? "✓" : ""}</span>
+        return `<li class="flex items-start gap-2.5 text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+          <span class="mt-0.5 w-5 h-5 rounded-md border-2 ${checked ? "bg-teal-500 border-teal-500 text-white flex items-center justify-center text-[10px]" : "border-slate-300 dark:border-slate-600 bg-white dark:bg-[#1e293b]"} shrink-0 flex items-center justify-center font-bold text-[10px]">${checked ? "✓" : ""}</span>
           <span>${content}</span>
         </li>`;
       }
-      return `<li class="text-sm text-slate-700 leading-relaxed">${itemText}</li>`;
+      return `<li class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">${itemText}</li>`;
     }).join("\n");
     return `<${tag} class="${cls}">${body}</${tag}>`;
   }
 
   strong({ tokens }: Tokens.Strong): string {
     const text = tokens.map(tokenText).join("");
-    return `<strong class="font-extrabold text-slate-900">${text}</strong>`;
+    return `<strong class="font-extrabold text-slate-900 dark:text-slate-50">${text}</strong>`;
   }
 
   em({ tokens }: Tokens.Em): string {
     const text = tokens.map(tokenText).join("");
-    return `<em class="italic text-slate-600">${text}</em>`;
+    return `<em class="italic text-slate-600 dark:text-slate-400">${text}</em>`;
   }
 
   hr(): string {
-    return `<hr class="my-8 border-0 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />`;
+    return `<hr class="my-8 border-0 h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-700 to-transparent" />`;
   }
 
   codespan({ text }: { text: string }): string {
-    return `<code class="bg-slate-100 text-[#4F8EF7] px-1.5 py-0.5 rounded text-xs font-mono">${text}</code>`;
+    return `<code class="bg-slate-100 dark:bg-[#1e293b] text-[#4F8EF7] dark:text-[#93bbfd] px-1.5 py-0.5 rounded text-xs font-mono">${text}</code>`;
   }
 
   code({ text, lang }: { text: string; lang?: string }): string {
     const langLabel = lang ? `<div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">${lang}</div>` : "";
-    return `<div class="materi-code block bg-slate-900 text-slate-100 p-4 rounded-xl text-xs font-mono overflow-x-auto my-4 max-w-full border border-slate-800">${langLabel}<pre class="m-0 p-0 bg-transparent">${text}</pre></div>`;
+    return `<div class="materi-code block bg-slate-900 dark:bg-[#0c1222] text-slate-100 p-4 rounded-xl text-xs font-mono overflow-x-auto my-4 max-w-full border border-slate-800 dark:border-[#1e293b]">${langLabel}<pre class="m-0 p-0 bg-transparent">${text}</pre></div>`;
   }
 
   table(token: Tokens.Table): string {
     const head = token.header.map((h: Tokens.TableCell) => {
       const text = h.tokens.map(tokenText).join("");
-      return `<th class="px-4 py-2.5 text-left text-xs font-bold text-slate-600 bg-slate-50 border-b border-slate-200">${text}</th>`;
+      return `<th class="px-4 py-2.5 text-left text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-[#1e293b] border-b border-slate-200 dark:border-[#334155]">${text}</th>`;
     }).join("");
     const body = token.rows.map((row: Tokens.TableCell[]) => {
       const cells = row.map((c: Tokens.TableCell) => {
         const text = c.tokens.map(tokenText).join("");
-        return `<td class="px-4 py-2.5 text-sm text-slate-700 border-b border-slate-100">${text}</td>`;
+        return `<td class="px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-[#1e293b]">${text}</td>`;
       }).join("");
-      return `<tr class="hover:bg-slate-50/50 transition-colors">${cells}</tr>`;
+      return `<tr class="hover:bg-slate-50/50 dark:hover:bg-[#1e293b]/50 transition-colors">${cells}</tr>`;
     }).join("");
-    return `<div class="overflow-x-auto my-4"><table class="min-w-full text-sm border border-slate-200 rounded-xl overflow-hidden"><thead>${head}</thead><tbody>${body}</tbody></table></div>`;
+    return `<div class="overflow-x-auto my-4"><table class="min-w-full text-sm border border-slate-200 dark:border-[#334155] rounded-xl overflow-hidden"><thead>${head}</thead><tbody>${body}</tbody></table></div>`;
   }
 
   image({ href, title, text }: Tokens.Image): string {
-    return `<figure class="my-4"><img src="${href}" alt="${text}" class="rounded-xl w-full border border-slate-100" />${title ? `<figcaption class="text-xs text-slate-400 text-center mt-2">${title}</figcaption>` : ""}</figure>`;
+    return `<figure class="my-4"><img src="${href}" alt="${text}" class="rounded-xl w-full border border-slate-100 dark:border-[#334155]" />${title ? `<figcaption class="text-xs text-slate-400 dark:text-slate-500 text-center mt-2">${title}</figcaption>` : ""}</figure>`;
   }
 
   link({ href, title, tokens }: Tokens.Link): string {
     const text = tokens.map(tokenText).join("");
-    return `<a href="${href}"${title ? ` title="${title}"` : ""} target="_blank" rel="noopener noreferrer" class="text-[#4F8EF7] font-semibold hover:underline">${text}</a>`;
+    return `<a href="${href}"${title ? ` title="${title}"` : ""} target="_blank" rel="noopener noreferrer" class="text-[#4F8EF7] dark:text-[#60a5fa] font-semibold hover:underline">${text}</a>`;
   }
 }
 

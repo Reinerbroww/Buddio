@@ -23,6 +23,7 @@ import api, { ApiError } from "@/services/api";
 import type { Lesson } from "@/lib/types";
 import { useHighlights } from "@/hooks/useHighlights";
 import { HIGHLIGHT_COLORS } from "@/lib/highlight-types";
+import { useLanguage } from "@/context/LanguageContext";
 import HighlightableContent from "@/components/highlight/HighlightableContent";
 
 function extractYouTubeId(url: string): string | null {
@@ -40,6 +41,7 @@ function extractYouTubeId(url: string): string | null {
 }
 
 function NotesPanel({ lessonId, onClose }: { lessonId: number; onClose: () => void }) {
+  const { t } = useLanguage();
   const [notes, setNotes] = useState(() => {
     if (typeof window === "undefined") return "";
     return localStorage.getItem(`buddio_notes_${lessonId}`) ?? "";
@@ -68,22 +70,22 @@ function NotesPanel({ lessonId, onClose }: { lessonId: number; onClose: () => vo
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-white shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-[#334155] bg-white dark:bg-[#1e293b] shrink-0">
         <div className="flex items-center gap-2">
           <StickyNote className="w-4 h-4 text-[#7C5CFF]" />
-          <h3 className="font-bold text-slate-900 text-sm">Catatan Belajar</h3>
+          <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm">{t("materi.notesTitle")}</h3>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={handleSaveNow}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-semibold text-[#4F8EF7] bg-[#4F8EF7]/8 hover:bg-[#4F8EF7]/15 rounded-lg transition-colors"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-semibold text-[#4F8EF7] bg-[#4F8EF7]/8 dark:bg-[#60a5fa]/15 hover:bg-[#4F8EF7]/15 rounded-lg transition-colors"
           >
             <Save className="w-3 h-3" />
-            {saved ? "Tersimpan!" : "Simpan"}
+            {saved ? t("common.saved") : t("common.save")}
           </button>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-[#334155] hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
           >
             <Minimize2 className="w-4 h-4" />
           </button>
@@ -93,13 +95,13 @@ function NotesPanel({ lessonId, onClose }: { lessonId: number; onClose: () => vo
         <textarea
           value={notes}
           onChange={(e) => handleChange(e.target.value)}
-          placeholder={"Tulis catatan belajarmu di sini...\n\nContoh:\n- Poin penting yang harus diingat\n- Pertanyaan untuk ditanyakan ke Kak Buddio\n- Ringkasan versi sendiri"}
-          className="w-full h-full resize-none text-sm text-slate-700 leading-relaxed bg-slate-50 border border-slate-100 rounded-xl p-4 outline-none focus:border-[#4F8EF7] focus:bg-white transition-all placeholder-slate-400"
+          placeholder={t("materi.notesPlaceholder")}
+          className="w-full h-full resize-none text-sm text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-[#0f172a] border border-slate-100 dark:border-[#334155] rounded-xl p-4 outline-none focus:border-[#4F8EF7] dark:focus:bg-[#0f172a] focus:bg-white transition-all placeholder-slate-400 dark:placeholder-slate-500"
         />
       </div>
-      <div className="px-4 py-2 border-t border-slate-100 bg-slate-50/50 shrink-0">
-        <p className="text-[10px] text-slate-400 text-center">
-          Catatan tersimpan otomatis di browser ini ({notes.length} karakter)
+      <div className="px-4 py-2 border-t border-slate-100 dark:border-[#334155] bg-slate-50/50 dark:bg-[#0f172a]/50 shrink-0">
+        <p className="text-[10px] text-slate-400 dark:text-slate-500 text-center">
+          {t("materi.notesAuto", { count: notes.length })}
         </p>
       </div>
     </div>
@@ -110,6 +112,7 @@ function MateriPageContent() {
   const params = useParams();
   const router = useRouter();
   const lessonId = Number(params?.id);
+  const { t } = useLanguage();
 
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [loading, setLoading] = useState(true);
@@ -225,8 +228,8 @@ function MateriPageContent() {
       {error && <div className="text-xs bg-rose-50 border border-rose-200 text-rose-600 rounded-xl px-4 py-3">{error}</div>}
 
       {highlights.length > 0 && (
-        <div className="flex items-center gap-3 flex-wrap bg-white border border-slate-100 rounded-xl px-4 py-2.5">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Highlight:</span>
+        <div className="flex items-center gap-3 flex-wrap bg-white dark:bg-[#1e293b] border border-slate-100 dark:border-[#334155] rounded-xl px-4 py-2.5">
+          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t("materi.highlightLabel")}</span>
           {yellowCount > 0 && (
             <button onClick={() => scrollToHighlight("yellow")} className="text-[10px] font-semibold text-amber-700 bg-amber-100 hover:bg-amber-200 px-2 py-0.5 rounded-full transition-colors cursor-pointer">
               {HIGHLIGHT_COLORS.yellow.emoji} {yellowCount}
@@ -251,49 +254,49 @@ function MateriPageContent() {
       )}
 
       {!hasRichContent && !generating ? (
-        <div className="bg-white border border-slate-100 rounded-2xl p-6 sm:p-8 text-center space-y-5">
+        <div className="bg-white dark:bg-[#1e293b] border border-slate-100 dark:border-[#334155] rounded-2xl p-6 sm:p-8 text-center space-y-5">
           <div className="mx-auto w-14 h-14 rounded-full bg-[#4F8EF7]/10 flex items-center justify-center">
             <Sparkles className="w-7 h-7 text-[#4F8EF7]" />
           </div>
           <div className="space-y-1.5 max-w-sm mx-auto">
-            <h3 className="font-bold text-slate-900 text-sm">Materi belum tersedia</h3>
-            <p className="text-xs text-slate-500 leading-relaxed">Klik tombol di bawah agar AI Buddio menyusun materi pembelajaran lengkap.</p>
+            <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm">{t("materi.notReady")}</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{t("materi.notReadyDesc")}</p>
           </div>
           <button onClick={handleGenerateContent} disabled={generating} className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#4F8EF7] to-[#7C5CFF] text-white font-semibold text-sm rounded-xl shadow-md shadow-[#4F8EF7]/15 hover:scale-[1.02] hover:shadow-lg transition-all duration-300">
-            <Sparkles className="w-4 h-4" /> Generate Materi Sekarang
+            <Sparkles className="w-4 h-4" /> {t("materi.generate")}
           </button>
         </div>
       ) : generating ? (
-        <div className="bg-white border border-slate-100 rounded-2xl p-6 sm:p-8 text-center space-y-5">
+        <div className="bg-white dark:bg-[#1e293b] border border-slate-100 dark:border-[#334155] rounded-2xl p-6 sm:p-8 text-center space-y-5">
           <Loader2 className="w-10 h-10 text-[#4F8EF7] animate-spin mx-auto" />
           <div className="space-y-1.5">
-            <h3 className="font-bold text-slate-900 text-sm">Menyusun materi...</h3>
-            <p className="text-xs text-slate-500">AI Buddio sedang menyiapkan materi lengkap untukmu.</p>
+            <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm">{t("materi.generating")}</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{t("materi.generatingDesc")}</p>
           </div>
         </div>
       ) : (
         <>
-          <div className="bg-white border border-slate-100 rounded-2xl p-5 sm:p-7 space-y-6">
+          <div className="bg-white dark:bg-[#1e293b] border border-slate-100 dark:border-[#334155] rounded-2xl p-5 sm:p-7 space-y-6">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-[#4F8EF7]/10 flex items-center justify-center">
                   <BookOpen className="w-5 h-5 text-[#4F8EF7]" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-slate-900 text-sm">Materi Inti</h3>
-                  <p className="text-[11px] text-slate-400">{lesson.source ?? "AI Buddio"}</p>
+                  <h3 className="font-extrabold text-slate-900 dark:text-slate-100 text-sm">{t("materi.coreTitle")}</h3>
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500">{lesson.source ?? "AI Buddio"}</p>
                 </div>
               </div>
               <button
                 onClick={() => setHighlightMode(!highlightMode)}
                 className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg transition-all duration-200 ${
                   highlightMode
-                    ? "text-amber-700 bg-amber-100 border border-amber-200 shadow-sm"
-                    : "text-slate-400 bg-slate-50 border border-slate-100 hover:text-slate-600 hover:bg-slate-100"
+                    ? "text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 shadow-sm"
+                    : "text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-[#0f172a] border border-slate-100 dark:border-[#334155] hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#334155]"
                 }`}
               >
                 <Highlighter className="w-3 h-3" />
-                {highlightMode ? "Mode Aktif — Blok teks" : "Aktifkan Highlight"}
+                {highlightMode ? t("materi.highlightActive") : t("materi.highlightInactive")}
               </button>
             </div>
             <HighlightableContent
@@ -308,41 +311,41 @@ function MateriPageContent() {
           </div>
 
           {videos.length > 0 && (
-            <div className="bg-white border border-slate-100 rounded-2xl p-5 sm:p-7 space-y-5">
+            <div className="bg-white dark:bg-[#1e293b] border border-slate-100 dark:border-[#334155] rounded-2xl p-5 sm:p-7 space-y-5">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-rose-50 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-xl bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center">
                   <Video className="w-5 h-5 text-rose-500" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-slate-900 text-sm">Belajar Lewat Video</h3>
-                  <p className="text-[11px] text-slate-400">Video relevan untuk memperdalam pemahamanmu.</p>
+                  <h3 className="font-extrabold text-slate-900 dark:text-slate-100 text-sm">{t("materi.videoTitle")}</h3>
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500">{t("materi.videoDesc")}</p>
                 </div>
               </div>
               <div className="space-y-4">
                 {videos.map((v, i) => {
                   const ytId = extractYouTubeId(v.url);
                   return (
-                    <div key={i} className="bg-slate-50 border border-slate-100 rounded-xl overflow-hidden hover:border-[#4F8EF7]/30 transition-all duration-200">
+                    <div key={i} className="bg-slate-50 dark:bg-[#0f172a] border border-slate-100 dark:border-[#334155] rounded-xl overflow-hidden hover:border-[#4F8EF7]/30 transition-all duration-200">
                       {ytId ? (
                         <>
                           <div className="aspect-video w-full">
                             <iframe src={`https://www.youtube.com/embed/${ytId}?rel=0`} title={v.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="w-full h-full" />
                           </div>
                           <div className="px-4 py-3">
-                            <p className="text-sm font-bold text-slate-900">{v.title}</p>
-                            {v.description && <p className="text-xs text-slate-500 mt-1">{v.description}</p>}
+                            <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{v.title}</p>
+                            {v.description && <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{v.description}</p>}
                           </div>
                         </>
                       ) : (
-                        <a href={v.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 p-4 hover:bg-slate-100/80 transition-colors">
-                          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-rose-100 to-rose-50 flex items-center justify-center shrink-0">
+                        <a href={v.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 p-4 hover:bg-slate-100/80 dark:hover:bg-[#334155] transition-colors">
+                          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-rose-100 to-rose-50 dark:from-rose-500/20 dark:to-rose-500/10 flex items-center justify-center shrink-0">
                             <Play className="w-6 h-6 text-rose-500 ml-0.5" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-slate-900">{v.title}</p>
-                            {v.description && <p className="text-xs text-slate-500 mt-0.5">{v.description}</p>}
+                            <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{v.title}</p>
+                            {v.description && <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{v.description}</p>}
                           </div>
-                          <ExternalLink className="w-4 h-4 text-slate-400 shrink-0" />
+                          <ExternalLink className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
                         </a>
                       )}
                     </div>
@@ -352,24 +355,24 @@ function MateriPageContent() {
             </div>
           )}
 
-          <div className="bg-white border border-slate-100 rounded-2xl p-5 sm:p-7">
+          <div className="bg-white dark:bg-[#1e293b] border border-slate-100 dark:border-[#334155] rounded-2xl p-5 sm:p-7">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#4F8EF7] to-[#7C5CFF] text-white flex items-center justify-center shadow-md shadow-[#4F8EF7]/15 shrink-0">
                 <MessageCircle className="w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-slate-900 text-sm">Masih Bingung?</h3>
-                <p className="text-xs text-slate-500 leading-relaxed mt-0.5">Tanya Kak Buddio langsung tentang materi &quot;{lesson.step_title}&quot; ini.</p>
+                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm">{t("materi.stillConfused")}</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-0.5">{t("materi.stillConfusedDesc", { step: lesson.step_title ?? "" })}</p>
               </div>
               <button onClick={handleTanyaBuddio} className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#4F8EF7] to-[#7C5CFF] text-white font-semibold text-sm rounded-xl shadow-md shadow-[#4F8EF7]/15 hover:scale-[1.02] hover:shadow-lg transition-all duration-300">
-                <MessageCircle className="w-4 h-4" /> Tanya Kak Buddio
+                <MessageCircle className="w-4 h-4" /> {t("materi.askBuddio")}
               </button>
             </div>
           </div>
 
           <div className="flex justify-end pt-2">
             <button onClick={handleGenerateContent} disabled={generating} className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-[#4F8EF7] bg-[#4F8EF7]/8 hover:bg-[#4F8EF7]/15 border border-[#4F8EF7]/20 rounded-xl transition-all duration-200">
-              <RefreshCw className="w-3.5 h-3.5" /> Regenerate Materi
+              <RefreshCw className="w-3.5 h-3.5" /> {t("materi.regenerate")}
             </button>
           </div>
         </>
@@ -379,25 +382,25 @@ function MateriPageContent() {
 
   if (fullscreen) {
     return (
-      <div className="fixed inset-0 z-50 flex flex-col bg-[#F8FAFC]">
-        <div className="flex items-center justify-between px-6 py-3 bg-white border-b border-slate-200 shrink-0">
+      <div className="fixed inset-0 z-50 flex flex-col bg-[#F8FAFC] dark:bg-[#0f172a]">
+        <div className="flex items-center justify-between px-6 py-3 bg-white dark:bg-[#1e293b] border-b border-slate-200 dark:border-[#334155] shrink-0">
           <div className="flex items-center gap-3 min-w-0">
-            <button onClick={() => setFullscreen(false)} className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-400 hover:text-slate-700 transition-colors cursor-pointer">
-              <Minimize2 className="w-3.5 h-3.5" /> Keluar Mode Belajar
+            <button onClick={() => setFullscreen(false)} className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer">
+              <Minimize2 className="w-3.5 h-3.5" /> {t("materi.exitStudyMode")}
             </button>
-            <div className="w-px h-4 bg-slate-200" />
-            <h1 className="text-sm font-extrabold text-slate-900 truncate">{lesson.step_title}</h1>
+            <div className="w-px h-4 bg-slate-200 dark:bg-[#334155]" />
+            <h1 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 truncate">{lesson.step_title}</h1>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={() => setHighlightMode(!highlightMode)}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold rounded-lg transition-all duration-200 ${
                 highlightMode
-                  ? "text-amber-700 bg-amber-100 border border-amber-200 shadow-sm"
-                  : "text-amber-600 bg-amber-50 hover:bg-amber-100 border border-amber-100"
+                  ? "text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 shadow-sm"
+                  : "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 border border-amber-100 dark:border-amber-500/20"
               }`}
             >
-              <Highlighter className="w-3.5 h-3.5" /> {highlightMode ? "Highlight On" : "Highlight"}
+              <Highlighter className="w-3.5 h-3.5" /> {highlightMode ? t("materi.highlightOn") : t("materi.highlight")}
             </button>
             <button
               onClick={() => setShowNotes(!showNotes)}
@@ -405,10 +408,10 @@ function MateriPageContent() {
                 showNotes ? "text-white bg-[#7C5CFF] shadow-md shadow-[#7C5CFF]/15" : "text-[#7C5CFF] bg-[#7C5CFF]/8 hover:bg-[#7C5CFF]/15 border border-[#7C5CFF]/20"
               }`}
             >
-              <StickyNote className="w-3.5 h-3.5" /> Catatan
+              <StickyNote className="w-3.5 h-3.5" /> {t("materi.notes")}
             </button>
             <button onClick={handleComplete} disabled={completing} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold text-white bg-gradient-to-r from-[#22C55E] to-emerald-400 rounded-lg shadow-md hover:scale-[1.02] transition-all duration-300 disabled:opacity-50">
-              {completing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />} Selesai
+              {completing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />} {t("materi.done")}
             </button>
           </div>
         </div>
@@ -419,7 +422,7 @@ function MateriPageContent() {
             </div>
           </div>
           {showNotes && (
-            <div className="w-[380px] shrink-0 border-l border-slate-200 bg-white animate-in slide-in-from-right duration-300">
+            <div className="w-[380px] shrink-0 border-l border-slate-200 dark:border-[#334155] bg-white dark:bg-[#1e293b] animate-in slide-in-from-right duration-300">
               <NotesPanel lessonId={lessonId} onClose={() => setShowNotes(false)} />
             </div>
           )}
@@ -430,30 +433,30 @@ function MateriPageContent() {
 
   return (
     <div className="max-w-3xl mx-auto py-6 sm:py-8 space-y-8 animate-in fade-in duration-300">
-      <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-6">
+      <div className="flex items-center justify-between gap-4 border-b border-slate-100 dark:border-[#334155] pb-6">
         <div className="space-y-1.5 min-w-0">
-          <button onClick={() => router.back()} className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-400 hover:text-slate-700 transition-colors cursor-pointer mb-2">
-            <ArrowLeft className="w-3.5 h-3.5" /> Kembali ke Roadmap
+          <button onClick={() => router.back()} className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer mb-2">
+            <ArrowLeft className="w-3.5 h-3.5" /> {t("materi.backToRoadmap")}
           </button>
-          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">{lesson.step_title}</h2>
-          <p className="text-xs text-slate-500">Topik: {lesson.topic_title}</p>
+          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">{lesson.step_title}</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{t("materi.topic", { topic: lesson.topic_title ?? "" })}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => setHighlightMode(!highlightMode)}
             className={`inline-flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold rounded-xl transition-all duration-200 ${
               highlightMode
-                ? "text-amber-700 bg-amber-100 border border-amber-200 shadow-sm"
-                : "text-slate-500 bg-slate-50 border border-slate-200 hover:text-slate-700 hover:bg-slate-100"
+                ? "text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 shadow-sm"
+                : "text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-[#1e293b] border border-slate-200 dark:border-[#334155] hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#334155]"
             }`}
           >
-            <Highlighter className="w-4 h-4" /> <span className="hidden sm:inline">{highlightMode ? "Highlight On" : "Highlight"}</span>
+            <Highlighter className="w-4 h-4" /> <span className="hidden sm:inline">{highlightMode ? t("materi.highlightOn") : t("materi.highlight")}</span>
           </button>
           <button onClick={() => { setFullscreen(true); setShowNotes(true); }} className="inline-flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold text-[#4F8EF7] bg-[#4F8EF7]/8 hover:bg-[#4F8EF7]/15 border border-[#4F8EF7]/20 rounded-xl transition-all duration-200">
-            <Maximize2 className="w-4 h-4" /> <span className="hidden sm:inline">Mode Belajar</span>
+            <Maximize2 className="w-4 h-4" /> <span className="hidden sm:inline">{t("materi.studyMode")}</span>
           </button>
           <button onClick={handleComplete} disabled={completing} className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-gradient-to-r from-[#22C55E] to-emerald-400 rounded-xl shadow-md hover:scale-[1.02] transition-all duration-300 disabled:opacity-50">
-            {completing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />} Selesai
+            {completing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />} {t("materi.done")}
           </button>
         </div>
       </div>

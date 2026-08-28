@@ -1,10 +1,11 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   LayoutDashboard,
   BookOpen,
@@ -30,17 +31,6 @@ const GRADE_LABELS: Record<string, string> = {
   mahasiswa: "Mahasiswa",
   self_learner: "Self Learner",
 };
-
-// Sidebar Menu Items
-const MENU_ITEMS = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Topik Belajar", href: "/dashboard/topik", icon: BookOpen },
-  { label: "Roadmap", href: "/dashboard/roadmap", icon: Map },
-  { label: "Mentor AI", href: "/dashboard/mentor", icon: Sparkles },
-  { label: "Assessment", href: "/dashboard/assessment", icon: ClipboardCheck },
-  { label: "Progress", href: "/dashboard/progress", icon: BarChart3 },
-  { label: "Pengaturan", href: "/dashboard/pengaturan", icon: Settings },
-];
 
 // Buddio Logo Component (B + Smile + Speech Bubble concept)
 const Logo = ({ collapsed = false }: { collapsed?: boolean }) => (
@@ -95,6 +85,7 @@ export default function DashboardLayout({
   const router = useRouter();
   const { user, loading, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { lang, toggleLang, t } = useLanguage();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -121,7 +112,17 @@ export default function DashboardLayout({
     .join("");
 
   const displayName = user.full_name || user.email.split("@")[0];
-  const gradeLabel = user.grade_level ? GRADE_LABELS[user.grade_level] ?? user.grade_level : "—";
+  const gradeLabel = user.grade_level ? (lang === "en" ? t(`dashboard.grade.${user.grade_level}`) : GRADE_LABELS[user.grade_level] ?? user.grade_level) : "â€”";
+
+  const branding = [
+    { label: t("dashboard.title"), href: "/dashboard", icon: LayoutDashboard },
+    { label: t("dashboard.topic"), href: "/dashboard/topik", icon: BookOpen },
+    { label: t("dashboard.roadmap"), href: "/dashboard/roadmap", icon: Map },
+    { label: t("dashboard.mentor"), href: "/dashboard/mentor", icon: Sparkles },
+    { label: t("dashboard.assessment"), href: "/dashboard/assessment", icon: ClipboardCheck },
+    { label: t("dashboard.progress"), href: "/dashboard/progress", icon: BarChart3 },
+    { label: t("dashboard.settings"), href: "/dashboard/pengaturan", icon: Settings },
+  ];
 
   const trendingSearches = ["Machine Learning", "Python Dasar", "Aljabar Linear", "Fisika Termodinamika"];
   const filteredSearches = searchQuery
@@ -132,15 +133,15 @@ export default function DashboardLayout({
 
   // Helper to determine page title
   const getPageTitle = () => {
-    const current = MENU_ITEMS.find((item) => item.href === pathname);
-    return current ? current.label : "Dashboard";
+    const current = branding.find((item) => item.href === pathname);
+    return current ? current.label : t("dashboard.title");
   };
 
   // Nav item rendering logic
   const renderNavItems = (collapsed = false) => {
     return (
       <nav className="flex-1 space-y-1.5 px-4 py-6">
-        {MENU_ITEMS.map((item) => {
+        {branding.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
 
@@ -310,7 +311,7 @@ export default function DashboardLayout({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setIsSearchFocused(true)}
-                  placeholder="Cari topik atau materi..."
+                  placeholder={t("dashboard.search")}
                   className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 dark:bg-[#1e293b] text-slate-800 dark:text-slate-200 border border-slate-100 dark:border-[#334155] rounded-xl outline-none focus:border-[#4F8EF7] focus:bg-white dark:focus:bg-[#0f172a] transition-all duration-200"
                   autoFocus
                 />
@@ -318,7 +319,7 @@ export default function DashboardLayout({
                 {isSearchFocused && (
                   <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-[#1e293b] rounded-2xl border border-slate-100 dark:border-[#334155] shadow-lg py-3 z-30 animate-in fade-in slide-in-from-top-1 duration-200">
                     <div className="px-4 pb-2 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                      {searchQuery ? "Hasil Pencarian" : "Topik Populer"}
+                      {searchQuery ? t("dashboard.searchResults") : t("dashboard.popularTopics")}
                     </div>
                     <div className="space-y-1">
                       {filteredSearches.length > 0 ? (
@@ -338,7 +339,7 @@ export default function DashboardLayout({
                         ))
                       ) : (
                         <div className="px-4 py-2 text-sm text-slate-500 italic">
-                          Tidak ada hasil untuk &quot;{searchQuery}&quot;
+                          {t("dashboard.noResults")} &quot;{searchQuery}&quot;
                         </div>
                       )}
                     </div>
@@ -379,14 +380,14 @@ export default function DashboardLayout({
                       setIsNotificationOpen(false);
                       setIsProfileMenuOpen(false);
                     }}
-                    placeholder="Cari topik atau materi..."
+                    placeholder={t("dashboard.search")}
                     className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 dark:bg-[#1e293b] hover:bg-slate-100/70 dark:hover:bg-[#334155] focus:bg-white dark:focus:bg-[#0f172a] text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 border border-slate-100 dark:border-[#334155] focus:border-[#4F8EF7] rounded-xl outline-none transition-all duration-200"
                   />
 
                   {isSearchFocused && (
                     <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-[#1e293b] rounded-2xl border border-slate-100 dark:border-[#334155] shadow-lg py-3 z-30 animate-in fade-in slide-in-from-top-1 duration-200">
                       <div className="px-4 pb-2 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                        {searchQuery ? "Hasil Pencarian" : "Topik Populer"}
+                        {searchQuery ? t("dashboard.searchResults") : t("dashboard.popularTopics")}
                       </div>
                       <div className="space-y-1">
                         {filteredSearches.length > 0 ? (
@@ -405,7 +406,7 @@ export default function DashboardLayout({
                           ))
                         ) : (
                           <div className="px-4 py-2 text-sm text-slate-500 italic">
-                            Tidak ada hasil untuk &quot;{searchQuery}&quot;
+                            {t("dashboard.noResults")} &quot;{searchQuery}&quot;
                           </div>
                         )}
                       </div>
@@ -425,9 +426,18 @@ export default function DashboardLayout({
                 <button
                   onClick={toggleTheme}
                   className="p-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#334155] hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
-                  title={theme === "dark" ? "Mode Terang" : "Mode Gelap"}
+                  title={theme === "dark" ? t("dashboard.lightMode") : t("dashboard.darkMode")}
                 >
                   {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                </button>
+
+                {/* Language Toggle */}
+                <button
+                  onClick={toggleLang}
+                  className="px-2.5 py-1.5 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#334155] hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
+                  title={lang === "id" ? "Switch to English" : "Ganti ke Bahasa Indonesia"}
+                >
+                  {lang === "id" ? "EN" : "ID"}
                 </button>
 
                 {/* Notification Bell */}
@@ -452,12 +462,12 @@ export default function DashboardLayout({
                   {isNotificationOpen && (
                     <div className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-[#1e293b] rounded-2xl border border-slate-100 dark:border-[#334155] shadow-lg py-3 z-30 animate-in fade-in slide-in-from-top-1 duration-200">
                       <div className="px-4 py-2 border-b border-slate-50 dark:border-[#334155] flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">Notifikasi</span>
+                        <span className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">{t("dashboard.notifications")}</span>
                         <button 
                           onClick={() => alert("Tandai semua dibaca (Dummy)")}
                           className="text-[10px] text-[#4F8EF7] hover:underline font-semibold"
                         >
-                          Tandai dibaca semua
+                          {t("dashboard.markAllRead")}
                         </button>
                       </div>
                       <div className="max-h-72 overflow-y-auto divide-y divide-slate-50 dark:divide-[#334155]">
@@ -467,7 +477,7 @@ export default function DashboardLayout({
                           </div>
                           <div className="space-y-1">
                             <p className="text-xs text-slate-800 dark:text-slate-200 leading-normal">
-                              <strong>Roadmap Baru!</strong> AI Mentor menyusun peta belajar untuk Machine Learning. 🤖
+                              <strong>Roadmap Baru!</strong> AI Mentor menyusun peta belajar untuk Machine Learning. ðŸ¤–
                             </p>
                             <span className="text-[10px] text-slate-400 dark:text-slate-500">10 menit yang lalu</span>
                           </div>
@@ -478,7 +488,7 @@ export default function DashboardLayout({
                           </div>
                           <div className="space-y-1 flex-1">
                             <p className="text-xs text-slate-800 dark:text-slate-200 leading-normal">
-                              <strong>Kuis Selesai!</strong> Kamu menyelesaikan Kuis Python Dasar dengan skor 90%. 🎉
+                              <strong>Kuis Selesai!</strong> Kamu menyelesaikan Kuis Python Dasar dengan skor 90%. ðŸŽ‰
                             </p>
                             <span className="text-[10px] text-slate-400 dark:text-slate-500">2 jam yang lalu</span>
                           </div>
@@ -489,7 +499,7 @@ export default function DashboardLayout({
                           </div>
                           <div className="space-y-1">
                             <p className="text-xs text-slate-800 dark:text-slate-200 leading-normal">
-                              <strong>Pertahankan Streak!</strong> Belajar hari ini untuk menjaga 12 hari streak belajarmu. 🔥
+                              <strong>Pertahankan Streak!</strong> Belajar hari ini untuk menjaga 12 hari streak belajarmu. ðŸ”¥
                             </p>
                             <span className="text-[10px] text-slate-400 dark:text-slate-500">5 jam yang lalu</span>
                           </div>
@@ -534,7 +544,7 @@ export default function DashboardLayout({
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#334155] transition-colors"
                         >
                           <User className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                          Profil Saya
+                          {t("dashboard.profile")}
                         </Link>
                         <Link
                           href="/dashboard/pengaturan"
@@ -542,7 +552,7 @@ export default function DashboardLayout({
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#334155] transition-colors"
                         >
                           <Settings className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                          Pengaturan Akun
+                          {t("dashboard.accountSettings")}
                         </Link>
                       </div>
                       <div className="border-t border-slate-50 dark:border-[#334155] pt-1">
@@ -573,3 +583,4 @@ export default function DashboardLayout({
     </div>
   );
 }
+

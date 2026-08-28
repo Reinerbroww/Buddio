@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { LanguageProvider } from "@/context/LanguageContext";
 import "./globals.css";
 import "katex/dist/katex.min.css";
 
@@ -30,7 +31,9 @@ export default function RootLayout({
     <html lang="id" className={`${jakarta.variable} ${inter.variable} h-full antialiased`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <LanguageProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

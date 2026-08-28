@@ -5,11 +5,13 @@ import { Loader2, Settings as SettingsIcon, User as UserIcon, Lock, CheckCircle2
 import api, { ApiError } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
+import { useLanguage } from "@/context/LanguageContext";
 import type { Settings, User } from "@/lib/types";
 
 export default function PengaturanPage() {
   const { user, loading } = useAuth();
   const { theme: currentTheme, setTheme: setCurrentTheme } = useTheme();
+  const { lang: contextLang, setLang: setContextLang } = useLanguage();
 
   const [settingsLoading, setSettingsLoading] = useState(true);
   const [settingsInitial, setSettingsInitial] = useState<Settings | null>(null);
@@ -108,6 +110,11 @@ export default function PengaturanPage() {
     setCurrentTheme(newTheme as "light" | "dark");
   };
 
+  const handleLanguageChange = (newLang: string) => {
+    setLanguage(newLang);
+    setContextLang(newLang as "id" | "en");
+  };
+
   const inputClass =
     "w-full px-4 py-3 text-sm bg-slate-50 dark:bg-[#0f172a] border border-slate-100 dark:border-[#334155] focus:border-[#4F8EF7] focus:bg-white dark:focus:bg-[#0f172a] rounded-xl outline-none transition-all text-slate-900 dark:text-slate-200";
   const labelClass =
@@ -167,7 +174,7 @@ export default function PengaturanPage() {
             </div>
             <div className="space-y-1.5">
               <label className={labelClass}>Bahasa</label>
-              <select value={language} onChange={(e) => setLanguage(e.target.value)} className={inputClass}>
+              <select value={language} onChange={(e) => handleLanguageChange(e.target.value)} className={inputClass}>
                 <option value="id">Indonesia</option>
                 <option value="en">English</option>
               </select>

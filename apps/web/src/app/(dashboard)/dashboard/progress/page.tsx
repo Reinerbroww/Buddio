@@ -4,17 +4,19 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Clock, Target, Flame, Zap, Loader2, BookOpen, MessageSquare, Map, FileQuestion } from "lucide-react";
 import api, { ApiError } from "@/services/api";
 import type { ProgressStat, ProgressItem } from "@/lib/types";
+import { useLanguage } from "@/context/LanguageContext";
 
 function formatDuration(minutes: number): string {
   if (minutes >= 60) {
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
-    return m > 0 ? `${h}j ${m}m` : `${h}j`;
+    return m > 0 ? `${h}h ${m}m` : `${h}h`;
   }
   return `${minutes}m`;
 }
 
 export default function ProgressPage() {
+  const { t } = useLanguage();
   const [stats, setStats] = useState<ProgressStat | null>(null);
   const [items, setItems] = useState<ProgressItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +32,7 @@ export default function ProgressPage() {
         setItems(i);
       })
       .catch((err) => {
-        setError(err instanceof ApiError ? err.message : "Gagal memuat data progres.");
+        setError(err instanceof ApiError ? err.message : t("progress.loadFail"));
       })
       .finally(() => setLoading(false));
   }, []);
@@ -48,16 +50,16 @@ export default function ProgressPage() {
   }
 
   const statCards = [
-    { label: "Jam Belajar", value: stats?.study_hours ?? 0, icon: Clock, color: "#4F8EF7" },
-    { label: "Topik Aktif", value: stats?.topics ?? 0, icon: Target, color: "#7C5CFF" },
-    { label: "Streak Hari", value: stats?.streak ?? 0, icon: Flame, color: "#F97316" },
-    { label: "Rata-rata Progres", value: `${stats?.completion ?? 0}%`, icon: Zap, color: "#22C55E" },
+    { label: t("progress.studyHours"), value: stats?.study_hours ?? 0, icon: Clock, color: "#4F8EF7" },
+    { label: t("progress.activeTopics"), value: stats?.topics ?? 0, icon: Target, color: "#7C5CFF" },
+    { label: t("progress.streakDays"), value: stats?.streak ?? 0, icon: Flame, color: "#F97316" },
+    { label: t("progress.avgProgress"), value: `${stats?.completion ?? 0}%`, icon: Zap, color: "#22C55E" },
   ];
 
   const quotaChips = [
-    { label: "Chat", value: stats?.chat_remaining ?? 0, icon: MessageSquare, color: "#4F8EF7" },
-    { label: "Roadmap", value: stats?.roadmap_remaining ?? 0, icon: Map, color: "#7C5CFF" },
-    { label: "Kuis", value: stats?.quiz_remaining ?? 0, icon: FileQuestion, color: "#F97316" },
+    { label: t("progress.chat"), value: stats?.chat_remaining ?? 0, icon: MessageSquare, color: "#4F8EF7" },
+    { label: t("progress.roadmap"), value: stats?.roadmap_remaining ?? 0, icon: Map, color: "#7C5CFF" },
+    { label: t("progress.quiz"), value: stats?.quiz_remaining ?? 0, icon: FileQuestion, color: "#F97316" },
   ];
 
   return (
@@ -70,10 +72,10 @@ export default function ProgressPage() {
 
       <div className="border-b border-slate-100 pb-8">
         <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight font-sans">
-          Progres Belajar
+          {t("progress.title")}
         </h2>
         <p className="text-sm sm:text-base text-slate-500 font-sans mt-1.5">
-          Pantau perkembangan belajarmu bersama AI Mentor.
+          {t("progress.subtitle")}
         </p>
       </div>
 
@@ -95,13 +97,13 @@ export default function ProgressPage() {
       </div>
 
       <div className="bg-gradient-to-r from-[#4F8EF7]/8 to-[#7C5CFF]/8 border border-slate-100 rounded-2xl p-4 flex flex-wrap items-center gap-x-6 gap-y-2">
-        <span className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">Kuota AI</span>
+        <span className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">{t("progress.aiQuota")}</span>
         {quotaChips.map((chip) => {
           const Icon = chip.icon;
           return (
             <span key={chip.label} className="inline-flex items-center gap-1.5 text-xs text-slate-600">
               <Icon className="w-3.5 h-3.5" style={{ color: chip.color }} />
-              {chip.label}: <b>{chip.value} sisa</b>
+              {chip.label}: <b>{t("progress.left", { value: chip.value })}</b>
             </span>
           );
         })}
@@ -109,7 +111,7 @@ export default function ProgressPage() {
 
       {items.length > 0 ? (
         <div className="space-y-4">
-          <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Progres per Topik</h3>
+          <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">{t("progress.perTopic")}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {items.map((item) => (
               <div key={item.topic_id} className="bg-white border border-slate-100 rounded-2xl p-5 flex flex-col justify-between gap-4">
@@ -125,7 +127,7 @@ export default function ProgressPage() {
                 <div className="flex items-center justify-between gap-4 pt-2 border-t border-slate-50">
                   <span className="text-[11px] text-slate-500 flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5 text-[#4F8EF7]" />
-                    {formatDuration(item.study_minutes)} belajar
+                    {t("progress.studied", { duration: formatDuration(item.study_minutes) })}
                   </span>
                   {item.current_step && (
                     <span className="text-[11px] text-slate-500 truncate flex items-center gap-1.5">
@@ -144,9 +146,9 @@ export default function ProgressPage() {
             <BookOpen className="w-8 h-8 text-[#4F8EF7]" />
           </div>
           <div className="space-y-2 max-w-sm">
-            <h3 className="text-base font-bold text-slate-900">Belum ada data progres</h3>
+            <h3 className="text-base font-bold text-slate-900">{t("progress.emptyTitle")}</h3>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Mulai belajar topik pertamamu untuk melihat statistik dan perkembangan belajarmu di sini.
+              {t("progress.emptyDesc")}
             </p>
           </div>
         </div>

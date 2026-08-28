@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import { AuthProvider } from "@/context/AuthContext";
-import { ThemeProvider } from "@/context/ThemeContext";
-import { LanguageProvider } from "@/context/LanguageContext";
 import "./globals.css";
 import "katex/dist/katex.min.css";
 
@@ -17,9 +15,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Buddio — Teman Belajar Berbasis AI",
+  title: "Buddio — Your AI Study Buddy",
   description:
-    "Buddio membantu Anda belajar lebih efektif dengan peta belajar personal, evaluasi pemahaman, dan mentor AI. No one should have to learn alone.",
+    "Buddio helps you learn more effectively with a personal learning map, mastery checks, and an AI mentor. No one should have to learn alone.",
 };
 
 export default function RootLayout({
@@ -28,13 +26,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id" className={`${jakarta.variable} ${inter.variable} h-full antialiased`} data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang="en" className={`${jakarta.variable} ${inter.variable} h-full antialiased`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className="min-h-full flex flex-col">
-        <ThemeProvider>
-          <LanguageProvider>
-            <AuthProvider>{children}</AuthProvider>
-          </LanguageProvider>
-        </ThemeProvider>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

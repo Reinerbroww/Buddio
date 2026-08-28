@@ -19,19 +19,21 @@ import {
 } from "lucide-react";
 import api, { ApiError } from "@/services/api";
 import type { Topic } from "@/lib/types";
+import { useLanguage } from "@/context/LanguageContext";
 
 const POPULAR_TOPICS = [
-  { name: "Matematika", icon: Compass, learners: "2.4k pembelajar" },
-  { name: "Fisika", icon: Zap, learners: "1.8k pembelajar" },
-  { name: "Kimia", icon: FlaskConical, learners: "1.2k pembelajar" },
-  { name: "Biologi", icon: Dna, learners: "950 pembelajar" },
-  { name: "Bahasa Inggris", icon: Languages, learners: "3.1k pembelajar" },
-  { name: "Pemrograman", icon: Code, learners: "4.2k pembelajar" },
-  { name: "UI/UX", icon: Layers, learners: "2.0k pembelajar" },
-  { name: "Machine Learning", icon: Brain, learners: "1.5k pembelajar" },
+  { name: "Matematika", icon: Compass, learners: "2.4k learners" },
+  { name: "Fisika", icon: Zap, learners: "1.8k learners" },
+  { name: "Kimia", icon: FlaskConical, learners: "1.2k learners" },
+  { name: "Biologi", icon: Dna, learners: "950 learners" },
+  { name: "Bahasa Inggris", icon: Languages, learners: "3.1k learners" },
+  { name: "Pemrograman", icon: Code, learners: "4.2k learners" },
+  { name: "UI/UX", icon: Layers, learners: "2.0k learners" },
+  { name: "Machine Learning", icon: Brain, learners: "1.5k learners" },
 ];
 
 export default function PilihTopikPage() {
+  const { t } = useLanguage();
   const [searchVal, setSearchVal] = useState("");
   const [selectedTopic, setSelectedTopic] = useState("");
   const [creating, setCreating] = useState(false);
@@ -56,7 +58,7 @@ export default function PilihTopikPage() {
       const topic = await api.post<Topic>("/topics", { title: selectedTopic.trim() });
       window.location.href = `/dashboard/roadmap?topic=${topic.id}`;
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Gagal membuat topik.");
+      setError(err instanceof ApiError ? err.message : t("topik.createFail"));
       setCreating(false);
     }
   };
@@ -68,10 +70,10 @@ export default function PilihTopikPage() {
       {/* Title Header */}
       <div className="text-center space-y-2 max-w-xl mx-auto py-4">
         <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight font-sans">
-          Apa yang ingin kamu pelajari hari ini?
+          {t("topik.title")}
         </h2>
         <p className="text-sm text-slate-500 font-sans leading-relaxed">
-          Tentukan topik pelajaran atau bidang keahlianmu. AI Mentor Buddio akan menganalisis dan menyusun peta jalan belajar yang disesuaikan khusus untukmu.
+          {t("topik.subtitle")}
         </p>
       </div>
 
@@ -90,7 +92,7 @@ export default function PilihTopikPage() {
           type="text"
           value={searchVal}
           onChange={handleSearchChange}
-          placeholder="Contoh: React, Kalkulus, Fisika, TOEFL..."
+          placeholder={t("topik.searchPlaceholder")}
           className="w-full pl-11 pr-5 py-4 text-base bg-white border border-slate-100 focus:border-[#4F8EF7] rounded-xl outline-none shadow-xs focus:shadow-md transition-all duration-200 text-slate-900 placeholder-slate-400"
         />
         {searchVal && (
@@ -110,7 +112,7 @@ export default function PilihTopikPage() {
       <div className="space-y-4">
         <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
           <Sparkles className="w-4 h-4 text-[#4F8EF7]" />
-          Topik Populer
+          {t("topik.popularTopics")}
         </h3>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -157,7 +159,7 @@ export default function PilihTopikPage() {
           }`}
         >
           {creating ? <Loader2 className="w-4.5 h-4.5 animate-spin" /> : <BookOpen className="w-4.5 h-4.5" />}
-          <span>{creating ? "Menyiapkan topik..." : "Buat Roadmap Belajar"}</span>
+          <span>{creating ? t("topik.creatingTopic") : t("topik.createRoadmapBtn")}</span>
           <ArrowRight className="w-4.5 h-4.5 transition-transform group-hover:translate-x-1 duration-200" />
         </button>
       </div>

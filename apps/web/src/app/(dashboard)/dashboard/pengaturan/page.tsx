@@ -11,7 +11,7 @@ import type { Settings, User } from "@/lib/types";
 export default function PengaturanPage() {
   const { user, loading } = useAuth();
   const { theme: currentTheme, setTheme: setCurrentTheme } = useTheme();
-  const { lang: contextLang, setLang: setContextLang } = useLanguage();
+  const { lang: contextLang, setLang: setContextLang, t } = useLanguage();
 
   const [settingsLoading, setSettingsLoading] = useState(true);
   const [settingsInitial, setSettingsInitial] = useState<Settings | null>(null);
@@ -41,7 +41,7 @@ export default function PengaturanPage() {
         setDailyGoal(s.daily_goal);
       })
       .catch((err) => {
-        setSettingsError(err instanceof ApiError ? err.message : "Gagal memuat pengaturan.");
+        setSettingsError(err instanceof ApiError ? err.message : t("settings.loadError"));
       })
       .finally(() => setSettingsLoading(false));
   }, []);
@@ -68,9 +68,9 @@ export default function PengaturanPage() {
       setNotification(updated.notification);
       setLanguage(updated.language);
       setDailyGoal(updated.daily_goal);
-      setSettingsSuccess("Pengaturan tersimpan.");
+      setSettingsSuccess(t("settings.saved"));
     } catch (err) {
-      setSettingsError(err instanceof ApiError ? err.message : "Gagal menyimpan pengaturan.");
+      setSettingsError(err instanceof ApiError ? err.message : t("settings.saveError"));
     } finally {
       setSettingsSaving(false);
     }
@@ -81,11 +81,11 @@ export default function PengaturanPage() {
     setPasswordError(null);
     setPasswordSuccess(null);
     if (newPassword !== confirmPassword) {
-      setPasswordError("Konfirmasi password tidak cocok.");
+      setPasswordError(t("settings.passwordMismatch"));
       return;
     }
     if (newPassword.length < 8) {
-      setPasswordError("Password baru minimal 8 karakter.");
+      setPasswordError(t("settings.passwordTooShort"));
       return;
     }
     setPasswordSaving(true);
@@ -97,9 +97,9 @@ export default function PengaturanPage() {
       setOldPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      setPasswordSuccess("Password berhasil diganti.");
+      setPasswordSuccess(t("settings.passwordChanged"));
     } catch (err) {
-      setPasswordError(err instanceof ApiError ? err.message : "Gagal mengganti password.");
+      setPasswordError(err instanceof ApiError ? err.message : t("settings.passwordFail"));
     } finally {
       setPasswordSaving(false);
     }
@@ -132,10 +132,10 @@ export default function PengaturanPage() {
     <div className="max-w-4xl mx-auto py-6 sm:py-8 space-y-8 animate-in fade-in duration-300">
       <div className="space-y-1.5 border-b border-slate-100 dark:border-[#334155] pb-8">
         <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight font-sans">
-          Pengaturan
+          {t("settings.title")}
         </h2>
         <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 font-sans">
-          Kelola preferensi aplikasi, informasi profil, dan keamanan akunmu.
+          {t("settings.desc")}
         </p>
       </div>
 
@@ -145,8 +145,8 @@ export default function PengaturanPage() {
             <SettingsIcon className="w-5 h-5 text-[#4F8EF7]" />
           </div>
           <div>
-            <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm">Pengaturan</h3>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">Atur preferensi tampilan dan kebiasaan belajarmu.</p>
+            <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm">{t("settings.sectionTitle")}</h3>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">{t("settings.sectionDesc")}</p>
           </div>
         </div>
 
@@ -166,14 +166,14 @@ export default function PengaturanPage() {
         <form onSubmit={handleSaveSettings} className="space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className={labelClass}>Tema</label>
+              <label className={labelClass}>{t("settings.theme")}</label>
               <select value={theme} onChange={(e) => handleThemeChange(e.target.value)} className={inputClass}>
                 <option value="light">Light</option>
                 <option value="dark">Dark</option>
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className={labelClass}>Bahasa</label>
+              <label className={labelClass}>{t("settings.language")}</label>
               <select value={language} onChange={(e) => handleLanguageChange(e.target.value)} className={inputClass}>
                 <option value="id">Indonesia</option>
                 <option value="en">English</option>
@@ -182,9 +182,9 @@ export default function PengaturanPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className={labelClass}>Notifikasi</label>
+            <label className={labelClass}>{t("settings.notifications")}</label>
             <label className="flex items-center justify-between bg-slate-50 dark:bg-[#0f172a] border border-slate-100 dark:border-[#334155] rounded-xl px-4 py-3 cursor-pointer">
-              <span className="text-sm text-slate-600 dark:text-slate-300">Aktifkan notifikasi belajar</span>
+              <span className="text-sm text-slate-600 dark:text-slate-300">{t("settings.notificationsLabel")}</span>
               <input
                 type="checkbox"
                 checked={notification}
@@ -196,7 +196,7 @@ export default function PengaturanPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className={labelClass}>Target Belajar Harian (menit)</label>
+            <label className={labelClass}>{t("settings.dailyGoal")}</label>
             <input
               type="number"
               min={0}
@@ -212,7 +212,7 @@ export default function PengaturanPage() {
             className="w-full sm:w-auto px-5 py-3 bg-gradient-to-r from-[#4F8EF7] to-[#7C5CFF] text-white font-semibold text-sm rounded-xl shadow-md shadow-[#4F8EF7]/15 hover:opacity-90 hover:scale-[1.01] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:pointer-events-none"
           >
             {settingsSaving && <Loader2 className="w-4 h-4 animate-spin" />}
-            Simpan Pengaturan
+            {t("settings.saveSettings")}
           </button>
         </form>
       </section>
@@ -223,8 +223,8 @@ export default function PengaturanPage() {
             <UserIcon className="w-5 h-5 text-[#7C5CFF]" />
           </div>
           <div>
-            <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm">Profil</h3>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">Perbarui informasi dirimu agar pengalaman belajar lebih personal.</p>
+            <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm">{t("settings.profileTitle")}</h3>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">{t("settings.profileDesc")}</p>
           </div>
         </div>
 
@@ -237,8 +237,8 @@ export default function PengaturanPage() {
             <Lock className="w-5 h-5 text-[#F97316]" />
           </div>
           <div>
-            <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm">Ganti Password</h3>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">Amankan akunmu dengan password baru.</p>
+            <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm">{t("settings.changePassword")}</h3>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">{t("settings.changePasswordDesc")}</p>
           </div>
         </div>
 
@@ -257,35 +257,35 @@ export default function PengaturanPage() {
 
         <form onSubmit={handleChangePassword} className="space-y-5">
           <div className="space-y-1.5">
-            <label className={labelClass}>Password Lama</label>
+            <label className={labelClass}>{t("settings.oldPassword")}</label>
             <input
               type="password"
               required
               value={oldPassword}
               onChange={(e) => setOldPassword(e.target.value)}
-              placeholder="Password lama kamu"
+              placeholder={t("settings.oldPasswordPlaceholder")}
               className={inputClass}
             />
           </div>
           <div className="space-y-1.5">
-            <label className={labelClass}>Password Baru</label>
+            <label className={labelClass}>{t("settings.newPassword")}</label>
             <input
               type="password"
               required
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Minimal 8 karakter"
+              placeholder={t("settings.newPasswordPlaceholder")}
               className={inputClass}
             />
           </div>
           <div className="space-y-1.5">
-            <label className={labelClass}>Konfirmasi Password Baru</label>
+            <label className={labelClass}>{t("settings.confirmPassword")}</label>
             <input
               type="password"
               required
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Ulangi password baru"
+              placeholder={t("settings.confirmPasswordPlaceholder")}
               className={inputClass}
             />
           </div>
@@ -296,7 +296,7 @@ export default function PengaturanPage() {
             className="w-full sm:w-auto px-5 py-3 bg-gradient-to-r from-[#4F8EF7] to-[#7C5CFF] text-white font-semibold text-sm rounded-xl shadow-md shadow-[#4F8EF7]/15 hover:opacity-90 hover:scale-[1.01] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:pointer-events-none"
           >
             {passwordSaving && <Loader2 className="w-4 h-4 animate-spin" />}
-            Ganti Password
+            {t("settings.changePasswordBtn")}
           </button>
         </form>
       </section>
@@ -305,6 +305,7 @@ export default function PengaturanPage() {
 }
 
 function ProfileForm({ user }: { user: User }) {
+  const { t } = useLanguage();
   const { refreshUser } = useAuth();
   const [fullName, setFullName] = useState(user.full_name ?? "");
   const [learningGoal, setLearningGoal] = useState(user.learning_goal ?? "");
@@ -328,9 +329,9 @@ function ProfileForm({ user }: { user: User }) {
     try {
       await api.put<User>("/users/me", changes);
       await refreshUser();
-      setSuccess("Profil berhasil disimpan.");
+      setSuccess(t("settings.profileSaved"));
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Gagal menyimpan profil.");
+      setError(err instanceof ApiError ? err.message : t("settings.saveError"));
     } finally {
       setSaving(false);
     }
@@ -352,22 +353,22 @@ function ProfileForm({ user }: { user: User }) {
       )}
       <form onSubmit={handleSaveProfile} className="space-y-5">
         <div className="space-y-1.5">
-          <label className={labelClass}>Nama Lengkap</label>
+          <label className={labelClass}>{t("settings.fullName")}</label>
           <input
             type="text"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            placeholder="Nama lengkap kamu"
+            placeholder={t("settings.fullNamePlaceholder")}
             className={inputClass}
           />
         </div>
         <div className="space-y-1.5">
-          <label className={labelClass}>Tujuan Belajar</label>
+          <label className={labelClass}>{t("settings.learningGoal")}</label>
           <input
             type="text"
             value={learningGoal}
             onChange={(e) => setLearningGoal(e.target.value)}
-            placeholder="Contoh: Lulus UTBK, menguasai pemrograman..."
+            placeholder={t("settings.learningGoalPlaceholder")}
             className={inputClass}
           />
         </div>
@@ -378,7 +379,7 @@ function ProfileForm({ user }: { user: User }) {
           className="w-full sm:w-auto px-5 py-3 bg-gradient-to-r from-[#4F8EF7] to-[#7C5CFF] text-white font-semibold text-sm rounded-xl shadow-md shadow-[#4F8EF7]/15 hover:opacity-90 hover:scale-[1.01] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:pointer-events-none"
         >
           {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-          Simpan Profil
+          {t("settings.saveProfile")}
         </button>
       </form>
     </>

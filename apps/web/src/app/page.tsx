@@ -17,26 +17,26 @@ import { BuddioLogo } from "@/components/BuddioLogo";
 const FEATURES = [
   {
     icon: Map,
-    title: "Peta Belajar AI",
-    desc: "AI menyusun roadmap langkah demi langkah sesuai jenjang dan tujuan belajarmu.",
+    title: "AI Learning Map",
+    desc: "AI builds a step-by-step roadmap matched to your level and learning goals.",
     gradient: "from-[#4F8EF7] to-[#7C5CFF]",
   },
   {
     icon: MessageCircle,
-    title: "Mentor AI 24/7",
-    desc: "Tanya apa saja, kapan saja. Mentor Buddio menjelaskan pelan-pelan dengan analogi yang mudah dipahami.",
+    title: "24/7 AI Mentor",
+    desc: "Ask anything, anytime. Buddio explains step by step with easy-to-understand analogies.",
     gradient: "from-[#7C5CFF] to-[#FACC15]",
   },
   {
     icon: ClipboardCheck,
-    title: "Kuis Adaptif",
-    desc: "Uji pemahamanmu dengan soal yang dibuat khusus. Langsung dapat pembahasan setelah menjawab.",
+    title: "Adaptive Quizzes",
+    desc: "Test your understanding with questions made for you. Get instant explanations after answering.",
     gradient: "from-[#22C55E] to-[#4F8EF7]",
   },
   {
     icon: BarChart3,
-    title: "Progress Terarah",
-    desc: "Pantau perkembangan belajarmu. Kamu selalu tahu langkah berikutnya untuk terus maju.",
+    title: "Guided Progress",
+    desc: "Track your learning. You always know your next step to keep moving forward.",
     gradient: "from-[#F59E0B] to-[#FACC15]",
   },
 ];
@@ -44,18 +44,18 @@ const FEATURES = [
 const STEPS = [
   {
     number: "1",
-    title: "Tentukan Topik",
-    desc: "Pilih topik yang ingin kamu pelajari, mulai dari matematika hingga pemrograman.",
+    title: "Pick a Topic",
+    desc: "Choose the topic you want to learn, from math to programming.",
   },
   {
     number: "2",
-    title: "Dapatkan Roadmap",
-    desc: "AI menyusun peta belajar personal berdasarkan jenjang dan tujuanmu.",
+    title: "Get Your Roadmap",
+    desc: "AI builds a personal learning map based on your level and goals.",
   },
   {
     number: "3",
-    title: "Belajar Bersama AI",
-    desc: "Ikuti langkah demi langkah, tanya mentor, dan kerjakan kuis untuk menguasai materi.",
+    title: "Learn with AI",
+    desc: "Follow the steps one by one, ask your mentor, and take quizzes to master the material.",
   },
 ];
 
@@ -69,13 +69,13 @@ export default function Home() {
 
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-500">
             <a href="#fitur" className="hover:text-slate-900 transition-colors">
-              Fitur
+              Features
             </a>
             <a href="#cara-kerja" className="hover:text-slate-900 transition-colors">
-              Cara Kerja
+              How it Works
             </a>
             <a href="#tentang" className="hover:text-slate-900 transition-colors">
-              Tentang
+              About
             </a>
           </nav>
 
@@ -84,13 +84,13 @@ export default function Home() {
               href="/login"
               className="text-sm font-semibold text-slate-600 hover:text-slate-900 px-3 py-2 transition-colors"
             >
-              Masuk
+              Sign In
             </Link>
             <Link
               href="/register"
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gradient-to-r from-[#4F8EF7] to-[#7C5CFF] hover:scale-[1.02] hover:shadow-lg hover:shadow-[#4F8EF7]/25 rounded-xl px-4 py-2.5 shadow-md shadow-[#4F8EF7]/15 transition-all duration-300"
             >
-              Daftar Gratis
+              Sign Up Free
             </Link>
           </div>
         </div>
@@ -108,19 +108,19 @@ export default function Home() {
             <div className="flex-1 space-y-7 text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white border border-slate-100 rounded-full text-xs font-semibold text-[#4F8EF7] shadow-sm">
                 <Sparkles className="w-3.5 h-3.5" />
-                Teman Belajar AI-mu
+                Your AI Study Buddy
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] text-slate-900">
-                Belajar Bersama.
+                Learn Together.
                 <span className="block mt-2 bg-gradient-to-r from-[#4F8EF7] to-[#7C5CFF] bg-clip-text text-transparent">
-                  Bertumbuh Bersama.
+                  Grow Together.
                 </span>
               </h1>
 
               <p className="text-base sm:text-lg text-slate-500 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                Buddio menyusun peta belajar yang sesuai levelmu, menemani dengan mentor AI,
-                dan membantumu memahami materi tanpa merasa sendirian.
+                Buddio builds a learning map that fits your level, guides you with an AI mentor,
+                and helps you understand material without ever feeling alone.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3">
@@ -128,29 +128,29 @@ export default function Home() {
                   href="/register"
                   className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-7 py-3.5 bg-gradient-to-r from-[#4F8EF7] to-[#7C5CFF] text-white font-bold text-sm rounded-xl shadow-md shadow-[#4F8EF7]/20 hover:scale-[1.02] hover:shadow-lg transition-all duration-300 group"
                 >
-                  Mulai Belajar
+                  Start Learning
                   <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 duration-200" />
                 </Link>
                 <a
                   href="#fitur"
                   className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-7 py-3.5 bg-white border border-slate-200 text-slate-700 font-bold text-sm rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all duration-300"
                 >
-                  Lihat Cara Kerja
+                  See How it Works
                 </a>
               </div>
 
               <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-2 text-xs text-slate-500">
                 <span className="inline-flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-[#22C55E]" />
-                  Gratis untuk memulai
+                  Free to start
                 </span>
                 <span className="inline-flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-[#22C55E]" />
-                  Bahasa Indonesia
+                  English &amp; Indonesian
                 </span>
                 <span className="inline-flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-[#22C55E]" />
-                  Adaptif sesuai jenjang
+                  Adapts to your level
                 </span>
               </div>
             </div>
@@ -163,10 +163,10 @@ export default function Home() {
                     B
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-slate-900">Kak Buddio</p>
+                    <p className="text-sm font-bold text-slate-900">Buddio</p>
                     <p className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                      Mentor AI online
+                      AI mentor online
                     </p>
                   </div>
                   <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-bold text-[#7C5CFF] bg-[#7C5CFF]/8 border border-[#7C5CFF]/20 rounded-full px-2.5 py-1">
@@ -178,7 +178,7 @@ export default function Home() {
                 <div className="space-y-3">
                   <div className="flex justify-end">
                     <div className="max-w-[80%] px-4 py-2.5 bg-gradient-to-r from-[#4F8EF7] to-[#7C5CFF] text-white text-sm rounded-2xl rounded-br-md shadow-sm">
-                      Jelaskan konsep fotosintesis dong!
+                      Explain the concept of photosynthesis, please!
                     </div>
                   </div>
                   <div className="flex items-end gap-2">
@@ -186,15 +186,15 @@ export default function Home() {
                       B
                     </div>
                     <div className="max-w-[85%] px-4 py-3 bg-slate-50 border border-slate-100 text-slate-700 text-sm leading-relaxed rounded-2xl rounded-bl-md shadow-sm">
-                      Bayangkan daun itu seperti dapur mini: matahari jadi kompornya, air dan udara jadi
-                      bahannya, dan glukosa adalah makanannya! 🍃
+                      Imagine a leaf is like a mini kitchen: the sun is the stove, water and air are
+                      the ingredients, and glucose is the meal! 🍃
                     </div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 border-t border-slate-100 pt-4">
                   <div className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-slate-400 text-xs">
-                    Tanya tentang materi atau minta peta belajar...
+                    Ask about material or request a learning map...
                   </div>
                   <button className="inline-flex items-center justify-center w-10 h-10 shrink-0 bg-gradient-to-r from-[#4F8EF7] to-[#7C5CFF] text-white rounded-xl shadow-md shadow-[#4F8EF7]/15 transition-transform hover:scale-105">
                     <ArrowRight className="w-4 h-4" />
@@ -211,20 +211,20 @@ export default function Home() {
             <div className="space-y-0.5">
               <p className="text-2xl font-extrabold text-slate-900">4.8/5</p>
               <p className="text-[11px] text-slate-500 flex items-center justify-center gap-1">
-                <Star className="w-3.5 h-3.5 text-[#FACC15] fill-[#FACC15]" /> Kepuasan pengguna
+                <Star className="w-3.5 h-3.5 text-[#FACC15] fill-[#FACC15]" /> User satisfaction
               </p>
             </div>
             <div className="space-y-0.5">
-              <p className="text-2xl font-extrabold text-slate-900">SD → Profesional</p>
-              <p className="text-[11px] text-slate-500">Semua jenjang</p>
+              <p className="text-2xl font-extrabold text-slate-900">SD → Pro</p>
+              <p className="text-[11px] text-slate-500">All levels</p>
             </div>
             <div className="space-y-0.5">
               <p className="text-2xl font-extrabold text-slate-900">24/7</p>
-              <p className="text-[11px] text-slate-500">Mentor AI siap bantu</p>
+              <p className="text-[11px] text-slate-500">AI mentor ready to help</p>
             </div>
             <div className="space-y-0.5">
               <p className="text-2xl font-extrabold text-slate-900">100%</p>
-              <p className="text-[11px] text-slate-500">Roadmap personal</p>
+              <p className="text-[11px] text-slate-500">Personal roadmap</p>
             </div>
           </div>
         </section>
@@ -234,14 +234,14 @@ export default function Home() {
           <div className="text-center space-y-3 max-w-2xl mx-auto">
             <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#4F8EF7] uppercase tracking-wider">
               <Rocket className="w-4 h-4" />
-              Fitur Buddio
+              Buddio Features
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900">
-              Semua yang kamu butuhkan untuk belajar lebih terarah
+              Everything you need to learn with direction
             </h2>
             <p className="text-sm text-slate-500 leading-relaxed">
-              Dari menyusun peta belajar hingga berlatih soal — semuanya ditemani mentor AI yang
-              memahami level belajarmu.
+              From building your learning map to practicing questions — all guided by an AI mentor
+              that understands your level.
             </p>
           </div>
 
@@ -272,10 +272,10 @@ export default function Home() {
             <div className="text-center space-y-3 max-w-2xl mx-auto">
               <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#7C5CFF] uppercase tracking-wider">
                 <Target className="w-4 h-4" />
-                Cara Kerja
+                How it Works
               </span>
               <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900">
-                Mulai belajar dalam 3 langkah mudah
+                Start learning in 3 easy steps
               </h2>
             </div>
 
@@ -287,7 +287,7 @@ export default function Home() {
                       {step.number}
                     </span>
                     <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                      Langkah {step.number}
+                      Step {step.number}
                     </span>
                   </div>
                   <h3 className="mt-4 font-bold text-slate-900 text-lg">{step.title}</h3>
@@ -308,16 +308,16 @@ export default function Home() {
           <div className="absolute bottom-0 left-0 w-72 h-72 bg-white/10 rounded-full blur-3xl pointer-events-none" />
           <div className="relative max-w-3xl mx-auto px-4 py-20 text-center">
             <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
-              Tidak ada lagi yang belajar sendirian
+              No one should have to learn alone
             </h2>
             <p className="mt-3 text-sm sm:text-base text-white/85 leading-relaxed">
-              Mulai sekarang, kamu punya teman belajar yang siap membantumu kapan saja.
+              From now on, you have a study buddy ready to help you anytime.
             </p>
             <Link
               href="/register"
               className="mt-8 inline-flex items-center gap-2 px-8 py-4 bg-white text-[#4F8EF7] font-bold text-sm rounded-xl shadow-lg hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 group"
             >
-              Mulai Belajar Gratis
+              Start Learning Free
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 duration-200" />
             </Link>
           </div>
@@ -329,7 +329,8 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-4 py-12 flex flex-col items-center gap-6 text-center">
           <BuddioLogo size="sm" />
           <p className="text-sm text-slate-500 max-w-md">
-            Buddio adalah teman belajar berbasis AI yang menemani setiap langkah perjalanan belajarmu.
+            Buddio is an AI-powered study buddy that accompanies you at every step of your learning
+            journey.
           </p>
           <div className="flex items-center gap-6 text-xs font-semibold text-slate-400">
             <span className="hover:text-slate-700 transition-colors cursor-default">
@@ -337,8 +338,8 @@ export default function Home() {
             </span>
           </div>
           <div className="w-full border-t border-slate-100 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
-            <span>&copy; 2026 Buddio. Semua hak dilindungi.</span>
-            <span>Belajar Bersama. Bertumbuh Bersama.</span>
+            <span>&copy; 2026 Buddio. All rights reserved.</span>
+            <span>Learn Together. Grow Together.</span>
           </div>
         </div>
       </footer>

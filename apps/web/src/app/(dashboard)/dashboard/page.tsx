@@ -5,9 +5,11 @@ import Link from "next/link";
 import { Plus, Sparkles, GraduationCap, ArrowRight, X, Play, Loader2, Flame, Clock, Target, Zap } from "lucide-react";
 import api, { ApiError } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import type { ProgressStat, Topic, Usage } from "@/lib/types";
 
 export default function DashboardPage() {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const [topics, setTopics] = useState<Topic[]>([]);
   const [stats, setStats] = useState<ProgressStat | null>(null);
@@ -30,7 +32,7 @@ export default function DashboardPage() {
         setUsage(u);
       })
       .catch((err) => {
-        setError(err instanceof ApiError ? err.message : "Gagal memuat data.");
+        setError(err instanceof ApiError ? err.message : t("home.loadFail"));
       })
       .finally(() => setLoading(false));
   }, []);
@@ -50,7 +52,7 @@ export default function DashboardPage() {
       setShowModal(false);
       window.location.href = `/dashboard/roadmap?topic=${topic.id}`;
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Gagal membuat topik.");
+      setError(err instanceof ApiError ? err.message : t("home.createFail"));
       setCreating(false);
     }
   };
@@ -60,9 +62,9 @@ export default function DashboardPage() {
   const others = sorted.slice(1);
 
   const aiRecommendations = [
-    { name: "Algoritma & Pemrograman", reason: "Cocok untuk memperkuat dasar logika matematika.", tag: "Logika Dasar" },
-    { name: "Persiapan SNBT: Tes Kognitif", reason: "Dirancang khusus untuk target masuk PTN.", tag: "Ujian PTN" },
-    { name: "Pengenalan Sains Data", reason: "Langkah lanjutan ideal setelah topik data.", tag: "Lanjutan" },
+    { name: "Algorithms & Programming", reason: "Great for strengthening your mathematical logic foundation.", tag: "Basic Logic" },
+    { name: "SNBT Prep: Cognitive Test", reason: "Designed specifically for university admission goals.", tag: "University Exam" },
+    { name: "Intro to Data Science", reason: "An ideal next step after data topics.", tag: "Advanced" },
   ];
 
   if (loading) {
@@ -73,13 +75,13 @@ export default function DashboardPage() {
     );
   }
 
-  const name = user?.full_name || user?.email.split("@")[0] || "Pembelajar";
+  const name = user?.full_name || user?.email.split("@")[0] || t("home.learner");
 
   const statCards = [
-    { label: "Jam Belajar", value: stats?.study_hours ?? 0, icon: Clock, color: "#4F8EF7" },
-    { label: "Topik Aktif", value: stats?.topics ?? 0, icon: Target, color: "#7C5CFF" },
-    { label: "Streak Hari", value: stats?.streak ?? 0, icon: Flame, color: "#F97316" },
-    { label: "Rata-rata Progres", value: `${stats?.completion ?? 0}%`, icon: Zap, color: "#22C55E" },
+    { label: t("home.studyHours"), value: stats?.study_hours ?? 0, icon: Clock, color: "#4F8EF7" },
+    { label: t("home.activeTopics"), value: stats?.topics ?? 0, icon: Target, color: "#7C5CFF" },
+    { label: t("home.streakDays"), value: stats?.streak ?? 0, icon: Flame, color: "#F97316" },
+    { label: t("home.avgProgress"), value: `${stats?.completion ?? 0}%`, icon: Zap, color: "#22C55E" },
   ];
 
   return (
@@ -94,10 +96,10 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 border-b border-slate-100 dark:border-[#334155] pb-8">
         <div className="space-y-1.5">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight font-sans">
-            Halo {name} 👋
+            {t("home.hello", { name })}
           </h2>
           <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 font-sans">
-            Apa yang ingin kamu pelajari hari ini? AI Mentor siap mendampingi perjalanan belajarmu.
+            {t("home.subtitle")}
           </p>
         </div>
 
@@ -107,7 +109,7 @@ export default function DashboardPage() {
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-[#4F8EF7] to-[#7C5CFF] text-white font-semibold text-sm rounded-xl shadow-md shadow-[#4F8EF7]/15 hover:scale-[1.02] hover:shadow-lg transition-all duration-300 group cursor-pointer"
           >
             <Plus className="w-5 h-5 transition-transform group-hover:rotate-90 duration-300" />
-            <span>Buat Topik Baru</span>
+            <span>{t("home.newTopicBtn")}</span>
           </button>
         </div>
       </div>
@@ -133,10 +135,10 @@ export default function DashboardPage() {
       {/* Quota Indicator */}
       {usage && (
         <div className="bg-gradient-to-r from-[#4F8EF7]/8 to-[#7C5CFF]/8 border border-slate-100 dark:border-[#334155] rounded-2xl p-4 flex flex-wrap items-center gap-x-6 gap-y-2">
-          <span className="text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Kuota AI hari ini</span>
-          <span className="text-xs text-slate-600 dark:text-slate-300">💬 Chat <b>{usage.chat_remaining}/{usage.limits.chat}</b></span>
-          <span className="text-xs text-slate-600 dark:text-slate-300">🗺️ Roadmap <b>{usage.roadmap_remaining}/{usage.limits.roadmap}</b></span>
-          <span className="text-xs text-slate-600 dark:text-slate-300">📝 Kuis <b>{usage.quiz_remaining}/{usage.limits.quiz}</b></span>
+          <span className="text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{t("home.aiQuota")}</span>
+          <span className="text-xs text-slate-600 dark:text-slate-300">💬 {t("home.chat")} <b>{usage.chat_remaining}/{usage.limits.chat}</b></span>
+          <span className="text-xs text-slate-600 dark:text-slate-300">🗺️ {t("home.roadmap")} <b>{usage.roadmap_remaining}/{usage.limits.roadmap}</b></span>
+          <span className="text-xs text-slate-600 dark:text-slate-300">📝 {t("home.quiz")} <b>{usage.quiz_remaining}/{usage.limits.quiz}</b></span>
         </div>
       )}
 
@@ -144,7 +146,7 @@ export default function DashboardPage() {
         <div className="space-y-8 animate-in fade-in duration-300">
           {/* Continue Learning */}
           <div className="space-y-4">
-            <h3 className="text-xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Lanjutkan Belajar</h3>
+            <h3 className="text-xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t("home.continueLearning")}</h3>
             <div className="bg-white dark:bg-[#1e293b] border border-slate-100 dark:border-[#334155] rounded-2xl p-6 shadow-xs hover:shadow-md transition-all duration-300 relative overflow-hidden group">
               <div className="absolute -right-16 -bottom-16 w-36 h-36 bg-gradient-to-br from-[#4F8EF7]/5 to-[#7C5CFF]/5 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-500" />
               <div className="space-y-5 relative z-10">
@@ -155,7 +157,7 @@ export default function DashboardPage() {
                   <div>
                     <h4 className="text-xl font-bold text-slate-900 dark:text-slate-100">{active?.title}</h4>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                      {active?.has_roadmap ? "Roadmap siap dilanjutkan." : "Belum ada roadmap. Buat peta belajarnya sekarang!"}
+                      {active?.has_roadmap ? t("home.roadmapReady") : t("home.noRoadmap")}
                     </p>
                   </div>
                   <div className="flex items-center justify-between sm:justify-end gap-6">
@@ -165,7 +167,7 @@ export default function DashboardPage() {
                       className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#4F8EF7] hover:bg-[#4F8EF7]/90 text-white font-semibold text-xs rounded-xl transition-all duration-200 shadow-xs hover:scale-[1.02]"
                     >
                       <Play className="w-3.5 h-3.5 fill-current shrink-0" />
-                      <span>{active?.has_roadmap ? "Lanjutkan" : "Buat Roadmap"}</span>
+                      <span>{active?.has_roadmap ? t("home.continueBtn") : t("home.createRoadmapBtn")}</span>
                     </Link>
                   </div>
                 </div>
@@ -176,7 +178,7 @@ export default function DashboardPage() {
           {/* Other topics */}
           {others.length > 0 && (
             <div className="space-y-4">
-              <h3 className="text-xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Topik Aktif Lainnya</h3>
+              <h3 className="text-xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t("home.otherTopics")}</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {others.map((topic) => (
                   <Link
@@ -187,12 +189,12 @@ export default function DashboardPage() {
                     <div>
                       <h5 className="font-bold text-slate-900 dark:text-slate-100 text-sm">{topic.title}</h5>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 truncate">
-                        {topic.has_roadmap ? "Roadmap tersedia" : "Belum ada roadmap"}
+                        {topic.has_roadmap ? t("home.roadmapAvailable") : t("home.noRoadmapShort")}
                       </p>
                     </div>
                     <div className="space-y-1.5">
                       <div className="flex justify-between items-center text-[10px] font-semibold text-slate-400 dark:text-slate-500">
-                        <span>Progres</span>
+                        <span>{t("home.progress")}</span>
                         <span className="text-slate-800 dark:text-slate-200">{topic.progress_percentage}%</span>
                       </div>
                       <div className="h-1.5 w-full bg-slate-50 dark:bg-[#334155] rounded-full overflow-hidden">
@@ -209,7 +211,7 @@ export default function DashboardPage() {
           <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-[#334155]">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-[#7C5CFF]" />
-              <h3 className="text-xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Rekomendasi Belajar AI</h3>
+              <h3 className="text-xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t("home.aiRecommendations")}</h3>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {aiRecommendations.map((rec) => (
@@ -226,7 +228,7 @@ export default function DashboardPage() {
                     }}
                     className="inline-flex items-center gap-1 text-[11px] font-bold text-[#4F8EF7] hover:text-[#7C5CFF] transition-colors mt-2 text-left"
                   >
-                    <span>Buat Peta Belajar</span>
+                    <span>{t("home.createLearningMap")}</span>
                     <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 duration-200" />
                   </button>
                 </div>
@@ -241,16 +243,16 @@ export default function DashboardPage() {
             <GraduationCap className="w-8 h-8 text-[#4F8EF7]" />
           </div>
           <div className="space-y-2 max-w-sm">
-            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">Belum ada topik aktif</h3>
+            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">{t("home.emptyTitle")}</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-              Mari mulai perjalanan belajarmu. Tentukan topik pertama yang ingin kamu pelajari bersama AI Mentor.
+              {t("home.emptyDesc")}
             </p>
           </div>
           <button
             onClick={() => setShowModal(true)}
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-50 dark:bg-[#1e293b] hover:bg-slate-100 dark:hover:bg-[#334155] text-xs font-bold text-[#4F8EF7] rounded-xl transition-all duration-300 group border border-slate-100 dark:border-[#334155]"
           >
-            <span>Mulai Belajar</span>
+            <span>{t("home.startLearning")}</span>
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 duration-200" />
           </button>
         </div>
@@ -264,7 +266,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-[#334155]">
               <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-[#4F8EF7]" />
-                Topik Belajar Baru
+                {t("home.newTopicTitle")}
               </h3>
               <button onClick={() => setShowModal(false)} className="p-1 rounded-lg text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-[#334155] hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
                 <X className="w-5 h-5" />
@@ -272,13 +274,13 @@ export default function DashboardPage() {
             </div>
             <form onSubmit={handleCreateTopic} className="mt-4 space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Apa yang ingin kamu pelajari?</label>
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{t("home.whatLearn")}</label>
                 <input
                   type="text"
                   required
                   value={topicName}
                   onChange={(e) => setTopicName(e.target.value)}
-                  placeholder="Contoh: Python Dasar, Machine Learning, Aljabar..."
+                  placeholder={t("home.topicPlaceholder")}
                   className="w-full px-4 py-3 text-sm bg-slate-50 dark:bg-[#0f172a] border border-slate-100 dark:border-[#334155] focus:border-[#4F8EF7] focus:bg-white dark:focus:bg-[#0f172a] rounded-xl outline-none transition-all text-slate-900 dark:text-slate-200"
                 />
               </div>
@@ -288,7 +290,7 @@ export default function DashboardPage() {
                 className="w-full mt-2 py-3 bg-gradient-to-r from-[#4F8EF7] to-[#7C5CFF] text-white font-semibold text-sm rounded-xl shadow-md hover:opacity-90 hover:scale-[1.01] transition-all flex items-center justify-center gap-2"
               >
                 {creating && <Loader2 className="w-4 h-4 animate-spin" />}
-                Buat Peta Belajar AI (Roadmap)
+                {t("home.createRoadmapAi")}
               </button>
             </form>
           </div>

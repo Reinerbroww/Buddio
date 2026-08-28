@@ -4,24 +4,26 @@ import React, { Suspense, useCallback, useEffect, useRef, useState } from "react
 import { useRouter, useSearchParams } from "next/navigation";
 import { Sparkles, Loader2, Map, RefreshCw, BookOpen, Clock, Target, ChevronDown, Check } from "lucide-react";
 import api, { ApiError } from "@/services/api";
+import { useLanguage } from "@/context/LanguageContext";
 import type { Topic, Roadmap, RoadmapStep } from "@/lib/types";
 
 function difficultyStyle(difficulty: string | null | undefined) {
   if (!difficulty) return null;
   const lower = difficulty.toLowerCase();
   if (lower.includes("mudah") || lower.includes("easy")) {
-    return { label: "Mudah", className: "bg-emerald-50 text-emerald-600 border-emerald-100" };
+    return { label: "Easy", className: "bg-emerald-50 text-emerald-600 border-emerald-100" };
   }
   if (lower.includes("sedang") || lower.includes("medium")) {
-    return { label: "Sedang", className: "bg-amber-50 text-amber-600 border-amber-100" };
+    return { label: "Medium", className: "bg-amber-50 text-amber-600 border-amber-100" };
   }
   if (lower.includes("sulit") || lower.includes("hard") || lower.includes("sukar")) {
-    return { label: "Sulit", className: "bg-rose-50 text-rose-600 border-rose-100" };
+    return { label: "Hard", className: "bg-rose-50 text-rose-600 border-rose-100" };
   }
   return { label: difficulty, className: "bg-slate-50 text-slate-600 border-slate-100" };
 }
 
 function RoadmapPageContent() {
+  const { t } = useLanguage();
   const router = useRouter();
   const searchParams = useSearchParams();
   const topicParam = searchParams.get("topic");
@@ -46,7 +48,7 @@ function RoadmapPageContent() {
       .get<Topic[]>("/topics")
       .then((data) => setTopics(data))
       .catch((err) => {
-        setError(err instanceof ApiError ? err.message : "Gagal memuat daftar topik.");
+        setError(err instanceof ApiError ? err.message : t("roadmap.loadTopicsFail"));
       })
       .finally(() => setTopicsLoading(false));
   }, []);
@@ -69,7 +71,7 @@ function RoadmapPageContent() {
           setRoadmapMissing(true);
           setLoadedTopicId(topicId);
         } else {
-          setError(err instanceof ApiError ? err.message : "Gagal memuat roadmap.");
+          setError(err instanceof ApiError ? err.message : t("roadmap.loadRoadmapFail"));
         }
       })
       .finally(() => setRoadmapLoading(false));
@@ -121,7 +123,7 @@ function RoadmapPageContent() {
           setQuotaExceeded(true);
           setError(err.message);
         } else {
-          setError(err instanceof ApiError ? err.message : "Gagal membuat roadmap.");
+          setError(err instanceof ApiError ? err.message : t("roadmap.createFail"));
         }
       } finally {
         if (timerRef.current) {
@@ -153,7 +155,7 @@ function RoadmapPageContent() {
         };
       });
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Gagal memperbarui langkah.");
+      setError(err instanceof ApiError ? err.message : t("roadmap.updateFail"));
     }
   }, []);
 
@@ -183,10 +185,10 @@ function RoadmapPageContent() {
         <div className="bg-white border border-slate-100 rounded-2xl p-6 sm:p-8">
           <div className="flex items-center gap-2 mb-1.5">
             <Map className="w-5 h-5 text-[#4F8EF7]" />
-            <h3 className="font-bold text-slate-900 text-base">Pilih Topik Belajar</h3>
+            <h3 className="font-bold text-slate-900 text-base">{t("roadmap.pickTopic")}</h3>
           </div>
           <p className="text-xs text-slate-500 mb-5">
-            Pilih salah satu topikmu untuk melihat peta belajar (roadmap) yang sudah disusun AI.
+            {t("roadmap.pickTopicDesc")}
           </p>
           {topicsLoading ? (
             <div className="flex items-center justify-center py-10">
@@ -194,7 +196,7 @@ function RoadmapPageContent() {
             </div>
           ) : topics.length === 0 ? (
             <p className="text-sm text-slate-500">
-              Belum ada topik. Buat topik terlebih dahulu dari halaman Dashboard.
+              {t("roadmap.noTopics")}
             </p>
           ) : (
             <div className="space-y-3">
@@ -204,24 +206,24 @@ function RoadmapPageContent() {
                 className="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-100 focus:border-[#4F8EF7] focus:bg-white rounded-xl outline-none transition-all"
               >
                 <option value="" disabled>
-                  Pilih topik...
+                  {t("roadmap.chooseTopic")}
                 </option>
-                {topics.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.title} {t.has_roadmap ? "(Roadmap tersedia)" : ""}
+                {topics.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.title} {item.has_roadmap ? t("roadmap.roadmapAvailableOpt") : ""}
                   </option>
                 ))}
               </select>
               <div className="space-y-2">
-                {topics.map((t) => (
+                {topics.map((item) => (
                   <button
-                    key={t.id}
-                    onClick={() => handleSelectTopic(String(t.id))}
+                    key={item.id}
+                    onClick={() => handleSelectTopic(String(item.id))}
                     className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-xl transition-all duration-200 text-left group"
                   >
-                    <span className="text-sm font-semibold text-slate-800">{t.title}</span>
+                    <span className="text-sm font-semibold text-slate-800">{item.title}</span>
                     <span className="text-[11px] text-slate-400 shrink-0">
-                      {t.has_roadmap ? "Roadmap tersedia" : "Belum ada roadmap"}
+                      {item.has_roadmap ? t("roadmap.roadmapReadyBadge") : t("roadmap.noRoadmapBadge")}
                     </span>
                   </button>
                 ))}
@@ -239,9 +241,9 @@ function RoadmapPageContent() {
             <Map className="w-8 h-8 text-[#4F8EF7]" />
           </div>
           <div className="space-y-2 max-w-md">
-            <h3 className="text-base font-bold text-slate-900">Belum ada roadmap untuk topik ini</h3>
+            <h3 className="text-base font-bold text-slate-900">{t("roadmap.noRoadmapTitle")}</h3>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Biarkan AI Mentor menyusun peta belajar langkah demi langkah untuk {topic?.title ?? "topik ini"}.
+              {t("roadmap.noRoadmapDesc", { topic: topic?.title ?? "" })}
             </p>
           </div>
           <button
@@ -250,10 +252,10 @@ function RoadmapPageContent() {
             className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#4F8EF7] to-[#7C5CFF] text-white font-semibold text-sm rounded-xl shadow-md shadow-[#4F8EF7]/15 hover:scale-[1.02] hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Sparkles className="w-4 h-4" />
-            Buat Roadmap
+            {t("roadmap.createRoadmap")}
           </button>
           {quotaExceeded && (
-            <p className="text-xs text-rose-500 font-medium">Kuota harian untuk membuat roadmap telah habis.</p>
+            <p className="text-xs text-rose-500 font-medium">{t("roadmap.quotaRoadmapExhausted")}</p>
           )}
         </div>
       ) : roadmap ? (
@@ -264,7 +266,7 @@ function RoadmapPageContent() {
               <div className="flex flex-wrap items-center gap-2">
                 {roadmap.mode === "mock" && (
                   <span className="inline-flex items-center px-2.5 py-0.5 text-[9px] font-bold text-amber-600 bg-amber-50 border border-amber-100 rounded-full uppercase tracking-wider">
-                    Mode Demo
+                    {t("roadmap.demoMode")}
                   </span>
                 )}
                 {difficultyStyle(roadmap.difficulty) && (
@@ -279,23 +281,23 @@ function RoadmapPageContent() {
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                   {roadmap.title}
                 </h2>
-                {topic && <p className="text-sm text-slate-500 mt-1">Topik: {topic.title}</p>}
+                {topic && <p className="text-sm text-slate-500 mt-1">{t("roadmap.topicLabel", { topic: topic.title })}</p>}
               </div>
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-slate-500">
                 {roadmap.estimated_hours != null && (
                   <span className="inline-flex items-center gap-1.5">
                     <Clock className="w-4 h-4 text-[#4F8EF7]" />
-                    Estimasi {roadmap.estimated_hours} jam
+                    {t("roadmap.estimated", { hours: roadmap.estimated_hours })}
                   </span>
                 )}
                 <span className="inline-flex items-center gap-1.5">
                   <Target className="w-4 h-4 text-[#7C5CFF]" />
-                  {roadmap.steps.length} langkah
+                  {t("roadmap.steps", { count: roadmap.steps.length })}
                 </span>
               </div>
               <div>
                 <div className="flex justify-between items-center text-xs font-semibold text-slate-500 mb-1.5">
-                  <span>Progres Peta Belajar</span>
+                  <span>{t("roadmap.roadmapProgress")}</span>
                   <span className="text-slate-900 font-extrabold">{roadmap.completion_percentage}%</span>
                 </div>
                 <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
@@ -312,14 +314,14 @@ function RoadmapPageContent() {
                   className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-[#4F8EF7] bg-[#4F8EF7]/8 hover:bg-[#4F8EF7]/15 border border-[#4F8EF7]/20 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
-                  Generate Ulang Roadmap
+                  {t("roadmap.generateAgain")}
                 </button>
               </div>
             </div>
           </div>
 
           <div className="space-y-3">
-            <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Langkah Belajar</h3>
+            <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">{t("roadmap.learningSteps")}</h3>
             {[...roadmap.steps]
               .sort((a, b) => a.order_number - b.order_number)
               .map((step) => {
@@ -329,7 +331,7 @@ function RoadmapPageContent() {
                     <div className="flex items-center gap-3 p-4">
                       <button
                         onClick={() => toggleStep(step)}
-                        aria-label={step.completed ? "Tandai belum selesai" : "Tandai selesai"}
+                        aria-label={step.completed ? t("roadmap.markNotDone") : t("roadmap.markDone")}
                         className={`shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
                           step.completed
                             ? "bg-gradient-to-r from-[#4F8EF7] to-[#7C5CFF] border-transparent"
@@ -339,7 +341,7 @@ function RoadmapPageContent() {
                         {step.completed && <Check className="w-3.5 h-3.5 text-white" />}
                       </button>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase">Langkah {step.order_number}</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">{t("roadmap.step", { n: step.order_number })}</p>
                         <p className={`text-sm font-semibold ${step.completed ? "text-slate-400 line-through" : "text-slate-900"}`}>
                           {step.title}
                         </p>
@@ -350,23 +352,23 @@ function RoadmapPageContent() {
                           className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold text-white bg-gradient-to-r from-[#4F8EF7] to-[#7C5CFF] rounded-lg shadow-xs hover:scale-[1.02] transition-all duration-200"
                         >
                           <BookOpen className="w-3.5 h-3.5" />
-                          Buka Materi
+                          {t("roadmap.openMaterial")}
                         </button>
                       )}
                       <button
                         onClick={() => {
-                          const queryPrompt = `Kak, tolong jelaskan tentang langkah belajar "${step.title}" dalam topik "${topic?.title ?? ""}". Apa konsep utamanya dan bagaimana cara memahaminya?`;
+                          const queryPrompt = t("roadmap.askPrompt", { step: step.title, topic: topic?.title ?? "" });
                           router.push(`/dashboard/mentor?topic=${selectedTopicId}&prompt=${encodeURIComponent(queryPrompt)}`);
                         }}
-                        title="Tanya Mentor (Fast Track)"
+                        title={t("roadmap.askMentorTooltip")}
                         className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold text-[#4F8EF7] bg-[#4F8EF7]/8 hover:bg-[#4F8EF7]/15 border border-[#4F8EF7]/20 rounded-lg shadow-xs hover:scale-[1.02] transition-all duration-200"
                       >
                         <Sparkles className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline">Tanya Mentor</span>
+                        <span className="hidden sm:inline">{t("roadmap.askMentor")}</span>
                       </button>
                       <button
                         onClick={() => toggleExpand(step.id)}
-                        aria-label={isExpanded ? "Tutup deskripsi" : "Buka deskripsi"}
+                        aria-label={isExpanded ? t("roadmap.closeDesc") : t("roadmap.openDesc")}
                         className="shrink-0 p-1 rounded-lg text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-colors"
                       >
                         <ChevronDown
@@ -380,7 +382,7 @@ function RoadmapPageContent() {
                           {step.description ? (
                             <p className="text-xs text-slate-500 leading-relaxed whitespace-pre-wrap">{step.description}</p>
                           ) : (
-                            <p className="text-xs text-slate-400 italic">Tidak ada deskripsi untuk langkah ini.</p>
+                            <p className="text-xs text-slate-400 italic">{t("roadmap.noDesc")}</p>
                           )}
                         </div>
                       </div>
@@ -398,9 +400,9 @@ function RoadmapPageContent() {
           <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-xl border border-slate-100 p-6 w-[90%] max-w-sm z-50 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center gap-2 pb-3">
               <Sparkles className="w-5 h-5 text-[#4F8EF7] animate-pulse" />
-              <h3 className="font-bold text-slate-900 text-sm">Menyusun Roadmap AI...</h3>
+              <h3 className="font-bold text-slate-900 text-sm">{t("roadmap.generatingTitle")}</h3>
             </div>
-            <p className="text-xs text-slate-500 mb-3">AI Mentor sedang menyusun langkah belajar terbaik untukmu.</p>
+            <p className="text-xs text-slate-500 mb-3">{t("roadmap.generatingDesc")}</p>
             <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-[#4F8EF7] to-[#7C5CFF] rounded-full transition-all duration-300"

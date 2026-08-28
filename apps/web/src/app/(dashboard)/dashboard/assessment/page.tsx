@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import api, { ApiError } from "@/services/api";
 import type { Quiz, QuizAttemptResult, Topic } from "@/lib/types";
+import { useLanguage } from "@/context/LanguageContext";
 
 type View = "list" | "taking" | "result";
 
@@ -33,6 +34,7 @@ function optionText(quiz: Quiz, questionId: number, optionIndex: number | null):
 }
 
 export default function AssessmentPage() {
+  const { t } = useLanguage();
   const [topics, setTopics] = useState<Topic[]>([]);
   const [selectedTopicId, setSelectedTopicId] = useState<number | null>(null);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
@@ -55,7 +57,7 @@ export default function AssessmentPage() {
       .then((data) => setQuizzes(data))
       .catch((err) => {
         setQuizzes([]);
-        setError(err instanceof ApiError ? err.message : "Gagal memuat daftar kuis.");
+        setError(err instanceof ApiError ? err.message : t("assessment.loadQuizzesFail"));
       })
       .finally(() => setLoadingQuizzes(false));
   }, []);
@@ -70,7 +72,7 @@ export default function AssessmentPage() {
         if (data.length > 0) setSelectedTopicId(data[0].id);
       } catch (err) {
         if (cancelled) return;
-        setError(err instanceof ApiError ? err.message : "Gagal memuat topik.");
+        setError(err instanceof ApiError ? err.message : t("assessment.loadTopicsFail"));
       } finally {
         if (!cancelled) setLoadingTopics(false);
       }
@@ -91,7 +93,7 @@ export default function AssessmentPage() {
       .catch((err) => {
         if (!cancelled) {
           setQuizzes([]);
-          setError(err instanceof ApiError ? err.message : "Gagal memuat daftar kuis.");
+          setError(err instanceof ApiError ? err.message : t("assessment.loadQuizzesFail"));
         }
       })
       .finally(() => { if (!cancelled) setLoadingQuizzes(false); });
@@ -130,7 +132,7 @@ export default function AssessmentPage() {
         setQuotaExceeded(true);
         setQuotaMessage(err.message);
       } else {
-        setError(err instanceof ApiError ? err.message : "Gagal membuat kuis baru.");
+        setError(err instanceof ApiError ? err.message : t("assessment.newQuizFail"));
       }
     } finally {
       setGenerating(false);
@@ -146,7 +148,7 @@ export default function AssessmentPage() {
       setResult(res);
       setView("result");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Gagal mengumpulkan jawaban.");
+      setError(err instanceof ApiError ? err.message : t("assessment.submitFail"));
     } finally {
       setSubmitting(false);
     }
@@ -190,10 +192,10 @@ export default function AssessmentPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 border-b border-slate-100 pb-8">
             <div className="space-y-1.5">
               <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight font-sans">
-                Latihan Kuis
+                {t("assessment.listTitle")}
               </h2>
               <p className="text-sm sm:text-base text-slate-500 font-sans">
-                Uji pemahamanmu dengan soal yang disusun AI Mentor.
+                {t("assessment.listDesc")}
               </p>
             </div>
             <div className="shrink-0">
@@ -212,7 +214,7 @@ export default function AssessmentPage() {
                   <Sparkles className="w-5 h-5 transition-transform group-hover:rotate-12 duration-300" />
                 )}
                 <span>
-                  {quotaExceeded ? "Kuota Harian Habis" : generating ? "Sedang menyusun soal..." : "Buat Kuis Baru"}
+                  {quotaExceeded ? t("assessment.quotaDailyExhausted") : generating ? t("assessment.generatingQuiz") : t("assessment.newQuizBtn")}
                 </span>
               </button>
             </div>
@@ -231,9 +233,9 @@ export default function AssessmentPage() {
                 <BookOpen className="w-8 h-8 text-[#4F8EF7]" />
               </div>
               <div className="space-y-1.5 max-w-sm">
-                <h3 className="text-base font-bold text-slate-900">Belum ada topik</h3>
+                <h3 className="text-base font-bold text-slate-900">{t("assessment.noTopicsTitle")}</h3>
                 <p className="text-xs text-slate-500 leading-relaxed">
-                  Buat topik belajar terlebih dahulu sebelum mengerjakan kuis.
+                  {t("assessment.noTopicsDesc")}
                 </p>
               </div>
             </div>
@@ -242,7 +244,7 @@ export default function AssessmentPage() {
               <div className="bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 space-y-2.5">
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
                   <BookOpen className="w-3.5 h-3.5 text-[#4F8EF7]" />
-                  Pilih Topik
+                  {t("assessment.pickTopic")}
                 </label>
                 <div className="relative">
                   <select
@@ -263,7 +265,7 @@ export default function AssessmentPage() {
               <div className="space-y-4">
                 <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                   <ListChecks className="w-4 h-4 text-[#4F8EF7]" />
-                  Daftar Kuis ({quizzes.length})
+                  {t("assessment.quizList", { count: quizzes.length })}
                 </h3>
 
                 {loadingQuizzes ? (
@@ -276,9 +278,9 @@ export default function AssessmentPage() {
                       <FileQuestion className="w-7 h-7 text-[#4F8EF7]" />
                     </div>
                     <div className="space-y-1.5 max-w-sm">
-                      <h4 className="font-bold text-slate-900 text-sm">Belum ada kuis untuk topik ini</h4>
+                      <h4 className="font-bold text-slate-900 text-sm">{t("assessment.noQuizTitle")}</h4>
                       <p className="text-xs text-slate-500 leading-relaxed">
-                        Klik &quot;Buat Kuis Baru&quot; agar AI Mentor menyusun soal latihan untukmu.
+                        {t("assessment.noQuizDesc")}
                       </p>
                     </div>
                   </div>
@@ -296,11 +298,11 @@ export default function AssessmentPage() {
                             <div className="flex items-center gap-2 mt-2 flex-wrap">
                               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[9px] font-bold text-[#4F8EF7] bg-[#4F8EF7]/8 rounded-full">
                                 <FileQuestion className="w-3 h-3" />
-                                {quiz.questions.length} soal
+                                {t("assessment.questions", { count: quiz.questions.length })}
                               </span>
                               {quiz.mode === "mock" && (
                                 <span className="inline-flex items-center px-2.5 py-0.5 text-[9px] font-bold text-amber-600 bg-amber-50 border border-amber-200 rounded-full">
-                                  Mode Demo
+                                  {t("assessment.demoMode")}
                                 </span>
                               )}
                             </div>
@@ -328,7 +330,7 @@ export default function AssessmentPage() {
                 className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
-                Kembali ke Daftar
+                {t("assessment.backToList")}
               </button>
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
@@ -336,15 +338,15 @@ export default function AssessmentPage() {
                 </h2>
                 {activeQuiz.mode === "mock" && (
                   <span className="inline-flex items-center px-2.5 py-0.5 text-[9px] font-bold text-amber-600 bg-amber-50 border border-amber-200 rounded-full">
-                    Mode Demo
+                    {t("assessment.demoMode")}
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-500">Pilih satu jawaban untuk setiap soal, lalu kumpulkan jawabanmu.</p>
+              <p className="text-xs text-slate-500">{t("assessment.takingDesc")}</p>
             </div>
             <span className="shrink-0 inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2">
               <CheckCircle2 className="w-4 h-4 text-[#22C55E]" />
-              {answeredCount}/{activeQuiz.questions.length} terjawab
+              {t("assessment.answered", { answered: answeredCount, total: activeQuiz.questions.length })}
             </span>
           </div>
 
@@ -406,12 +408,11 @@ export default function AssessmentPage() {
               {allAnswered ? (
                 <span className="font-semibold text-emerald-600 inline-flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4" />
-                  Semua soal sudah terjawab. Siap dikumpulkan!
+                  {t("assessment.allAnswered")}
                 </span>
               ) : (
                 <span>
-                  Masih ada <b className="text-slate-800">{activeQuiz.questions.length - answeredCount}</b> soal yang
-                  belum dijawab.
+                  {t("assessment.unansweredLeft", { count: activeQuiz.questions.length - answeredCount })}
                 </span>
               )}
             </div>
@@ -425,7 +426,7 @@ export default function AssessmentPage() {
               }`}
             >
               {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-              Kumpulkan Jawaban
+              {t("assessment.submitAnswers")}
             </button>
           </div>
         </div>
@@ -441,11 +442,11 @@ export default function AssessmentPage() {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-center gap-2 flex-wrap">
                   <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                    Skor: {result.score}/{result.total} ({percent}%)
+                    {t("assessment.score", { score: result.score, total: result.total, percent })}
                   </h2>
                   {activeQuiz.mode === "mock" && (
                     <span className="inline-flex items-center px-2.5 py-0.5 text-[9px] font-bold text-amber-600 bg-amber-50 border border-amber-200 rounded-full">
-                      Mode Demo
+                      {t("assessment.demoMode")}
                     </span>
                   )}
                 </div>
@@ -458,11 +459,11 @@ export default function AssessmentPage() {
             <div className="mt-6 grid grid-cols-2 gap-4 max-w-sm mx-auto">
               <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 text-center">
                 <p className="text-2xl font-extrabold text-emerald-600">{result.score}</p>
-                <p className="text-[11px] font-semibold text-emerald-600/80">Benar</p>
+                <p className="text-[11px] font-semibold text-emerald-600/80">{t("assessment.correct")}</p>
               </div>
               <div className="bg-rose-50 border border-rose-100 rounded-2xl p-4 text-center">
                 <p className="text-2xl font-extrabold text-rose-500">{result.total - result.score}</p>
-                <p className="text-[11px] font-semibold text-rose-500/80">Salah</p>
+                <p className="text-[11px] font-semibold text-rose-500/80">{t("assessment.wrong")}</p>
               </div>
             </div>
 
@@ -472,14 +473,14 @@ export default function AssessmentPage() {
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#4F8EF7] to-[#7C5CFF] text-white font-semibold text-sm rounded-xl shadow-md shadow-[#4F8EF7]/15 hover:scale-[1.02] hover:shadow-lg transition-all duration-300 cursor-pointer"
               >
                 <RotateCcw className="w-4 h-4" />
-                Kerjakan Lagi
+                {t("assessment.retake")}
               </button>
               <button
                 onClick={handleBackToList}
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-white border border-slate-200 text-slate-700 font-semibold text-sm rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all duration-300 cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" />
-                Kembali ke Daftar
+                {t("assessment.backToList")}
               </button>
             </div>
           </div>
@@ -488,7 +489,7 @@ export default function AssessmentPage() {
             <div className="space-y-4">
               <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                 <ListChecks className="w-4 h-4 text-[#4F8EF7]" />
-                Pembahasan Jawaban
+                {t("assessment.reviewAnswers")}
               </h3>
               <div className="space-y-4">
                 {result.details.map((d, idx) => {
@@ -516,18 +517,18 @@ export default function AssessmentPage() {
                           <div className="space-y-1.5 text-xs">
                             {d.your_answer !== null && yourText && (
                               <p className={d.correct ? "text-emerald-700" : "text-rose-700"}>
-                                Jawabanmu: <b>{yourText}</b>
+                                {t("assessment.yourAnswer")} <b>{yourText}</b>
                               </p>
                             )}
                             {!d.correct && (
                               <p className="text-emerald-700">
-                                Jawaban benar: <b>{correctText ?? "Tidak diketahui"}</b>
+                                {t("assessment.correctAnswer")} <b>{correctText ?? t("assessment.unknownAnswer")}</b>
                               </p>
                             )}
                           </div>
                           {d.explanation && (
                             <div className="text-xs bg-white/80 border border-slate-100 rounded-xl px-3.5 py-2.5 text-slate-600 leading-relaxed">
-                              <span className="font-bold text-slate-500">Penjelasan: </span>
+                              <span className="font-bold text-slate-500">{t("assessment.explanation")}</span>
                               {d.explanation}
                             </div>
                           )}
@@ -550,9 +551,9 @@ export default function AssessmentPage() {
               <Loader2 className="w-7 h-7 text-[#4F8EF7] animate-spin" />
             </div>
             <div className="space-y-1.5">
-              <h3 className="font-bold text-slate-900 text-base">Sedang menyusun soal...</h3>
+              <h3 className="font-bold text-slate-900 text-base">{t("assessment.generatingModalTitle")}</h3>
               <p className="text-xs text-slate-500 leading-relaxed">
-                AI Mentor sedang meracik kuis terbaik untukmu. Mohon tunggu sebentar.
+                {t("assessment.generatingModalDesc")}
               </p>
             </div>
           </div>

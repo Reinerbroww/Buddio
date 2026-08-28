@@ -4,18 +4,20 @@ import React, { useState } from "react";
 import { Loader2, Mail, Target, UserRound } from "lucide-react";
 import api, { ApiError } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import type { User } from "@/lib/types";
 
 const GRADE_LABELS: Record<string, string> = {
-  sd: "SD",
-  smp: "SMP",
-  sma: "SMA",
-  mahasiswa: "Mahasiswa",
+  sd: "Elementary",
+  smp: "Middle School",
+  sma: "High School",
+  mahasiswa: "College",
   self_learner: "Self Learner",
 };
 
 export default function ProfilePage() {
   const { user, loading } = useAuth();
+  const { t } = useLanguage();
 
   if (loading || !user) {
     return (
@@ -27,7 +29,7 @@ export default function ProfilePage() {
     );
   }
 
-  const displayName = user.full_name || user.email.split("@")[0] || "Pembelajar";
+  const displayName = user.full_name || user.email.split("@")[0] || t("profile.learner");
   const initials = displayName
     .split(/\s+/)
     .map((part) => part[0])
@@ -40,10 +42,10 @@ export default function ProfilePage() {
     <div className="max-w-4xl mx-auto py-6 sm:py-8 space-y-8 animate-in fade-in duration-300">
       <div className="border-b border-slate-100 pb-8">
         <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight font-sans">
-          Profil Saya
+          {t("profile.title")}
         </h2>
         <p className="text-sm sm:text-base text-slate-500 font-sans mt-1.5">
-          Kelola informasi profil dan tujuan belajarmu.
+          {t("profile.subtitle")}
         </p>
       </div>
 
@@ -81,7 +83,7 @@ export default function ProfilePage() {
         <div className="flex items-center gap-2 pb-5 border-b border-slate-100">
           <UserRound className="w-4 h-4 text-[#4F8EF7]" />
           <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">
-            Edit Profil
+            {t("profile.editProfile")}
           </h3>
         </div>
         <ProfileForm key={user.id} user={user} />
@@ -92,6 +94,7 @@ export default function ProfilePage() {
 
 function ProfileForm({ user }: { user: User }) {
   const { refreshUser } = useAuth();
+  const { t } = useLanguage();
   const [fullName, setFullName] = useState(user.full_name ?? "");
   const [learningGoal, setLearningGoal] = useState(user.learning_goal ?? "");
   const [saving, setSaving] = useState(false);
@@ -109,9 +112,9 @@ function ProfileForm({ user }: { user: User }) {
       if (learningGoal.trim()) payload.learning_goal = learningGoal.trim();
       await api.put<User>("/users/me", payload);
       await refreshUser();
-      setSuccess("Profil berhasil diperbarui.");
+      setSuccess(t("profile.saveSuccess"));
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Gagal memperbarui profil.");
+      setError(err instanceof ApiError ? err.message : t("profile.saveFail"));
     } finally {
       setSaving(false);
     }
@@ -132,25 +135,25 @@ function ProfileForm({ user }: { user: User }) {
       <form onSubmit={handleSubmit} className="mt-6 space-y-5">
         <div className="space-y-1.5">
           <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-            Nama Lengkap
+            {t("profile.fullName")}
           </label>
           <input
             type="text"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            placeholder="Nama lengkap kamu"
+            placeholder={t("profile.fullNamePlaceholder")}
             className="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-100 focus:border-[#4F8EF7] focus:bg-white rounded-xl outline-none transition-all"
           />
         </div>
         <div className="space-y-1.5">
           <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-            Tujuan Belajar
+            {t("profile.learningGoal")}
           </label>
           <input
             type="text"
             value={learningGoal}
             onChange={(e) => setLearningGoal(e.target.value)}
-            placeholder="Contoh: Lulus SNBT, menguasai Python, dll."
+            placeholder={t("profile.learningGoalPlaceholder")}
             className="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-100 focus:border-[#4F8EF7] focus:bg-white rounded-xl outline-none transition-all"
           />
         </div>
@@ -160,7 +163,7 @@ function ProfileForm({ user }: { user: User }) {
           className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#4F8EF7] to-[#7C5CFF] text-white font-semibold text-sm rounded-xl shadow-md shadow-[#4F8EF7]/15 hover:scale-[1.02] hover:shadow-lg transition-all duration-300 disabled:opacity-60 disabled:hover:scale-100 cursor-pointer"
         >
           {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-          Simpan Perubahan
+          {t("profile.saveChanges")}
         </button>
       </form>
     </>

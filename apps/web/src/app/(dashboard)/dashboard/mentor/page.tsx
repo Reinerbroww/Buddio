@@ -10,8 +10,9 @@ import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import api, { ApiError } from "@/services/api";
 import type { ChatHistory, ChatMessageItem, ChatResponse, Topic } from "@/lib/types";
+import { useLanguage } from "@/context/LanguageContext";
 
-const GREETING = "Halo! Aku Kak Buddio, mentor belajarmu. Mau tanya apa hari ini?";
+const GREETING = "Hello! I'm Buddio, your study mentor. What would you like to ask today?";
 
 function BuddioAvatar({ className = "w-7 h-7 text-[10px]" }: { className?: string }) {
   return (
@@ -24,6 +25,7 @@ function BuddioAvatar({ className = "w-7 h-7 text-[10px]" }: { className?: strin
 }
 
 function MentorPageContent() {
+  const { t } = useLanguage();
   const router = useRouter();
   const searchParams = useSearchParams();
   const topicParam = searchParams.get("topic");
@@ -57,7 +59,7 @@ function MentorPageContent() {
         }
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof ApiError ? err.message : "Gagal memuat topik.");
+        if (!cancelled) setError(err instanceof ApiError ? err.message : t("mentor.loadTopicsFail"));
       })
       .finally(() => { if (!cancelled) setLoadingTopics(false); });
     return () => { cancelled = true; };
@@ -78,7 +80,7 @@ function MentorPageContent() {
       })
       .catch((err) => {
         if (!cancelled) {
-          setError(err instanceof ApiError ? err.message : "Gagal memuat riwayat chat.");
+          setError(err instanceof ApiError ? err.message : t("mentor.loadHistoryFail"));
           setMessages([]);
         }
       })
@@ -122,10 +124,10 @@ function MentorPageContent() {
       setLastMode(res.mode);
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(err.status === 429 ? err.message || "Sisa kuota chat hari ini sudah habis." : err.message);
+        setError(err.status === 429 ? err.message || t("mentor.quotaExhausted") : err.message);
         if (err.status === 429) setRemaining(0);
       } else {
-        setError("Gagal mengirim pesan.");
+        setError(t("mentor.sendFail"));
       }
       setMessages((m) => m.filter((msg) => msg.id !== tempId));
       if (overrideText === undefined) {
@@ -166,7 +168,7 @@ function MentorPageContent() {
       await api.delete(`/mentor/history/${selectedTopicId}`);
       setMessages([]);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Gagal menghapus riwayat.");
+      setError(err instanceof ApiError ? err.message : t("mentor.deleteFail"));
     } finally {
       setDeleting(false);
     }
@@ -195,16 +197,16 @@ function MentorPageContent() {
             <GraduationCap className="w-8 h-8 text-[#4F8EF7]" />
           </div>
           <div className="space-y-2 max-w-sm">
-            <h3 className="text-base font-bold text-slate-900">Belum ada topik belajar</h3>
+            <h3 className="text-base font-bold text-slate-900">{t("mentor.noTopicsTitle")}</h3>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Kamu perlu membuat topik belajar dulu sebelum bisa bertanya pada AI Mentor Buddio.
+              {t("mentor.noTopicsDesc")}
             </p>
           </div>
           <Link
             href="/dashboard/topik"
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#4F8EF7] to-[#7C5CFF] text-white text-xs font-bold rounded-xl shadow-md shadow-[#4F8EF7]/15 hover:scale-[1.02] transition-all duration-300 group"
           >
-            <span>Buat Topik Belajar</span>
+            <span>{t("mentor.createTopicBtn")}</span>
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 duration-200" />
           </Link>
         </div>
@@ -220,10 +222,10 @@ function MentorPageContent() {
         </div>
         <div className="space-y-0.5">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight font-sans">
-            Mentor AI Buddio
+            {t("mentor.title")}
           </h2>
           <p className="text-sm text-slate-500 font-sans">
-            Tanya apa saja, Kak Buddio siap membantu belajarmu.
+            {t("mentor.subtitle")}
           </p>
         </div>
       </div>
@@ -237,7 +239,7 @@ function MentorPageContent() {
       <div className="bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="space-y-1.5 min-w-0">
           <label htmlFor="topic-select" className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-            Pilih Topik
+            {t("mentor.pickTopic")}
           </label>
           <select
             id="topic-select"
@@ -245,9 +247,9 @@ function MentorPageContent() {
             onChange={(e) => setSelectedTopicId(Number(e.target.value))}
             className="w-full sm:w-72 px-4 py-2.5 text-sm bg-slate-50 border border-slate-100 focus:border-[#4F8EF7] focus:bg-white rounded-xl outline-none transition-all text-slate-800 cursor-pointer"
           >
-            {topics.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.title}
+            {topics.map((tt) => (
+              <option key={tt.id} value={tt.id}>
+                {tt.title}
               </option>
             ))}
           </select>
@@ -255,12 +257,12 @@ function MentorPageContent() {
         <div className="flex flex-wrap items-center gap-3">
           {remaining !== null && (
             <span className="text-xs text-slate-600 bg-slate-50 border border-slate-100 rounded-full px-3 py-1.5">
-              Sisa kuota chat hari ini: <b className="text-slate-900">{remaining}</b>
+              {t("mentor.chatQuotaLeft")} <b className="text-slate-900">{remaining}</b>
             </span>
           )}
           {lastMode === "mock" && (
             <span className="text-[10px] font-bold text-[#7C5CFF] bg-[#7C5CFF]/8 border border-[#7C5CFF]/20 rounded-full px-3 py-1.5 uppercase tracking-wider">
-              Mode Demo
+              {t("mentor.demoMode")}
             </span>
           )}
           <button
@@ -269,7 +271,7 @@ function MentorPageContent() {
             className="inline-flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold text-rose-500 bg-rose-50 hover:bg-rose-100 rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-            Hapus Riwayat
+            {t("mentor.deleteHistory")}
           </button>
         </div>
       </div>
@@ -343,7 +345,7 @@ function MentorPageContent() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Tulis pertanyaanmu di sini..."
+            placeholder={t("mentor.chatPlaceholder")}
             className="flex-1 resize-none px-4 py-3 text-sm bg-slate-50 border border-slate-100 focus:border-[#4F8EF7] focus:bg-white rounded-xl outline-none transition-all text-slate-800 placeholder-slate-400"
           />
           <button

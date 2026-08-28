@@ -10,33 +10,33 @@ import { BuddioLogo } from "@/components/BuddioLogo";
 const GRADE_CONFIGS = [
   {
     key: "sd",
-    title: "SD (Sekolah Dasar)",
-    badge: "Kelas 1-6",
-    desc: "Pembelajaran visual dengan analogi sehari-hari.",
+    title: "Elementary School (SD)",
+    badge: "Grades 1-6",
+    desc: "Visual learning with everyday analogies.",
   },
   {
     key: "smp",
-    title: "SMP (Sekolah Menengah Pertama)",
-    badge: "Kelas 7-9",
-    desc: "Konsep terstruktur dengan analogi menarik.",
+    title: "Middle School (SMP)",
+    badge: "Grades 7-9",
+    desc: "Structured concepts with engaging analogies.",
   },
   {
     key: "sma",
-    title: "SMA (Sekolah Menengah Atas)",
-    badge: "Persiapan Kuliah/SNBT",
-    desc: "Analitis, rumus, dan latihan soal terarah.",
+    title: "High School (SMA)",
+    badge: "College / SNBT Prep",
+    desc: "Analytical, formulas, and targeted practice.",
   },
   {
     key: "mahasiswa",
-    title: "Mahasiswa",
-    badge: "Akademik & Riset",
-    desc: "Bahasa profesional dan analisis kritis.",
+    title: "University",
+    badge: "Academic & Research",
+    desc: "Professional language and critical analysis.",
   },
   {
     key: "self_learner",
-    title: "Self Learner / Profesional",
-    badge: "Skill & Karier",
-    desc: "Praktis, berorientasi industri, langsung implementasi.",
+    title: "Self Learner / Professional",
+    badge: "Skills & Career",
+    desc: "Practical, industry-oriented, ready to apply.",
   },
 ];
 
@@ -79,7 +79,7 @@ export default function OnboardingPage() {
       await refreshUser();
       router.push("/dashboard");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Terjadi kesalahan. Coba lagi.");
+      setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -103,11 +103,11 @@ export default function OnboardingPage() {
             <Sparkles className="h-7 w-7 text-white" />
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
-            Jenjang belajar apa yang paling cocok untukmu?
+            Which education level fits you best?
           </h1>
           <p className="text-sm text-slate-500 max-w-lg mx-auto leading-relaxed">
-            Buddio akan menyesuaikan bahasa, tingkat kesulitan materi, dan cara menjelaskan sesuai
-            jenjang yang kamu pilih.
+            Buddio will adjust the language, difficulty, and teaching style to match the level you
+            choose.
           </p>
         </div>
 
@@ -161,13 +161,13 @@ export default function OnboardingPage() {
 
         <div className="bg-white border border-slate-100 rounded-2xl p-5 flex flex-col gap-3 shadow-sm">
           <label className="text-xs font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-            <GraduationCap className="w-4 h-4 text-[#4F8EF7]" /> Tujuan belajarmu (opsional)
+            <GraduationCap className="w-4 h-4 text-[#4F8EF7]" /> Your learning goal (optional)
           </label>
           <input
             type="text"
             value={goal}
             onChange={(e) => setGoal(e.target.value)}
-            placeholder="Contoh: Persiapan SNBT, fasih ngoding Python, masuk PTN..."
+            placeholder="Example: Prepare for SNBT, become fluent in Python, get into university..."
             className="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-100 text-slate-900 placeholder-slate-400 focus:border-[#4F8EF7] focus:bg-white rounded-xl outline-none transition-all"
           />
         </div>
@@ -178,7 +178,7 @@ export default function OnboardingPage() {
           className="w-full py-3.5 bg-gradient-to-r from-[#4F8EF7] to-[#7C5CFF] hover:scale-[1.01] hover:shadow-lg hover:shadow-[#4F8EF7]/20 disabled:opacity-60 disabled:hover:scale-100 text-white font-bold text-sm rounded-xl shadow-md shadow-[#4F8EF7]/15 transition-all flex items-center justify-center gap-2"
         >
           {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-          Lanjut ke Dashboard
+          Continue to Dashboard
         </button>
       </main>
     </div>

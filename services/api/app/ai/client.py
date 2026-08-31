@@ -133,6 +133,61 @@ def _generate_json(prompt: str, max_tokens: int = 2048, temperature: float = 0.6
     return json.loads(text)
 
 
+def _sanitize_and_validate_lesson_content(content: str, step_title: str, topic_title: str) -> str:
+    """Ensure generated lesson markdown contains no empty callouts or dangling empty section headers."""
+    if not content:
+        return content
+
+    # 1. Fix empty [!tujuan] callout if no bullet points exist inside it
+    if "> [!tujuan]" in content:
+        tujuan_idx = content.find("> [!tujuan]")
+        next_section = content.find("---", tujuan_idx)
+        tujuan_block = content[tujuan_idx:next_section] if next_section != -1 else content[tujuan_idx:]
+        if "- [" not in tujuan_block and "- " not in tujuan_block:
+            default_tujuan = (
+                "> [!tujuan]\n"
+                "> **Tujuan Pembelajaran:**\n"
+                "> Setelah mempelajari materi ini, kamu akan bisa:\n"
+                f"> - [ ] **Menjelaskan** konsep inti dan peran penting {step_title} dalam {topic_title}.\n"
+                f"> - [ ] **Mengidentifikasi** tahapan utama dan mekanisme kerja {step_title}.\n"
+                f"> - [ ] **Menghitung/Menerapkan** teknik {step_title} pada skenario nyata selangkah demi selangkah.\n"
+                f"> - [ ] **Menganalisis** kesalahan umum dan batasan penerapan {step_title}.\n"
+            )
+            content = content[:tujuan_idx] + default_tujuan + "\n" + content[tujuan_idx + len(tujuan_block):]
+
+    # 2. Fix empty [!ingat] callout if no bullet points exist inside it
+    if "> [!ingat]" in content:
+        ingat_idx = content.find("> [!ingat]")
+        next_section = content.find("---", ingat_idx)
+        ingat_block = content[ingat_idx:next_section] if next_section != -1 else content[ingat_idx:]
+        if "- " not in ingat_block and "* " not in ingat_block:
+            default_ingat = (
+                "> [!ingat]\n"
+                "> **Ringkasan & Poin Kunci:**\n"
+                f"> - **Fondasi:** {step_title} merupakan tahapan krusial dalam pemrosesan {topic_title}.\n"
+                "> - **Pendekatan Bertahap:** Pahami intuisi dan masalah sebelum menerapkan rumus atau fungsi teknis.\n"
+                "> - **Validasi Data:** Selalu pisahkan dataset training dan test sebelum melakukan fitting parameter.\n"
+            )
+            content = content[:ingat_idx] + default_ingat + "\n" + content[ingat_idx + len(ingat_block):]
+
+    # 3. Clean up dangling empty section headers like "Pembahasan & Jawaban:\n\n---"
+    dangling_replacements = [
+        (
+            "Pembahasan & Jawaban:\n\n---",
+            "Pembahasan & Jawaban:\n> Lakukan perhitungan sesuai rumus di atas untuk mendapatkan nilai akhir ter-scale.\n\n---",
+        ),
+        (
+            "Langkah Perhitungan:\n\n---",
+            "Langkah Perhitungan:\n> 1. Tentukan nilai minimum dan maksimum data.\n> 2. Hitung substitusi variabel ke dalam rumus.\n\n---",
+        ),
+    ]
+    for old_pat, new_pat in dangling_replacements:
+        if old_pat in content:
+            content = content.replace(old_pat, new_pat)
+
+    return content
+
+
 class BuddioAI:
     """Facade over Gemini with graceful mock fallback."""
 
@@ -281,127 +336,47 @@ class BuddioAI:
             "  ]\n"
             "}\n\n"
             "=================================================================\n"
-            " PRINCIPLE #1: INSTRUCTIONAL COMPLETENESS, NOT INFORMATION DENSITY\n"
+            " SYARAT UTAMA: INSTRUCTIONAL COMPLETENESS & BREADTH OF TOPIC\n"
             "=================================================================\n\n"
-            "Tujuan utama Buddio adalah MENGAJAR siswa secara bertahap hingga paham dan BISA MENERAPKAN,\n"
-            "BUKAN sekadar menghasilkan rangkuman atau catatan padat bergaya buku teks.\n\n"
-            "Urutan Prioritas Pembelajaran:\n"
-            "  1. Keakuratan (Accuracy) → Fakta, rumus, sintaks, mekanisme HARUS BENAR.\n"
-            "  2. Pemahaman Bertahap (Progressive Understanding) → Mulai dari masalah & intuisi dasar sebelum istilah formal.\n"
-            "  3. Penerapan (Application) → Tunjukkan di mana dan bagaimana ilmu ini dipakai.\n"
-            "  4. Latihan (Practice) → Beri kesempatan siswa mencoba secara mandiri.\n"
-            "  5. Keterlibatan (Engagement) → Sajikan dengan menarik, ramah, dan terstruktur.\n\n"
-            "Pola Wajib Pengenalan Konsep: SEDERHANA → TEKNIS → PRAKTIS\n"
-            "  - Sederhana: Jelaskan intuisi dasar dengan bahasa yang mudah dipahami.\n"
-            "  - Teknis: Kenalkan definisi formal, rumus, atau mekanisme internal secara tepat.\n"
-            "  - Praktis: Tunjukkan contoh penerapan nyata dan latihan.\n\n"
-            "=================================================================\n"
-            " ALUR PEMBELAJARAN (LEARNING ARC FOR MAJOR CONCEPTS)\n"
-            "=================================================================\n\n"
-            "Untuk KONSEP UTAMA/BESAR dalam materi ini, gunakan alur belajar berikut:\n"
-            "  1. Konteks / Masalah (Masalah apa yang ingin kita selesaikan? Mengapa data raw/konsep awal kurang?)\n"
-            "  2. Intuisi (Gambarkan ide dasarnya dalam bahasa sederhana & 0-1 analogi kuat).\n"
-            "  3. Konsep Formal (Berikan definisi/rumus teknis yang tepat dan akurat).\n"
-            "  4. Cara Kerja (Jelaskan mekanisme atau prosedur selangkah demi selangkah).\n"
-            "  5. Contoh Terhitung / Worked Example (Hitung/kerjakan dari awal sampai akhir, tunjukkan semua angka & langkah).\n"
-            "  6. Coba Sendiri (Beri soal latihan kecil beserta pembahasan yang terpisah spoiler/garis pembatas).\n"
-            "  7. Kapan Digunakan (Situasi yang tepat untuk menerapkan konsep ini).\n"
-            "  8. Kapan TIDAK Digunakan (Batasan, trade-off, atau asumsi bila relevan).\n"
-            "  9. Kesalahan Umum (Tunjukkan miskonsepsi/workflow buruk vs workflow benar beserta alasannya).\n"
-            "  10. Cek Pemahaman (Berikan pertanyaan/kuis refleksi untuk menguji pemahaman).\n\n"
-            "CATATAN PENTING SOAL AKSI ALUR:\n"
-            "- Gunakan alur 10 langkah ini secara LENGKAP untuk KONSEP UTAMA/BESAR.\n"
-            "- JANGAN memaksakan seluruh 10 langkah untuk sub-konsep kecil; sesuaikan kedalamannya secara proporsional.\n"
-            "- Adaptasikan kedalaman materi dengan jenjang pengguna ({grade_level or 'sma'}) dan kompleksitas topik.\n"
-            "  Topik pemula prioritaskan alur intuitif dan ramah; topik universitas/lanjutan sertakan mekanisme dalam & edge cases.\n\n"
-            "=================================================================\n"
-            " GAMBARAN BESAR & PETA MENTAL (MENTAL MAP FIRST)\n"
-            "=================================================================\n\n"
-            "Sebelum masuk ke sub-topik mendalam, SELALU buka materi dengan PETA MENTAL / GAMBARAN BESAR.\n"
-            "  - Jelaskan seperti apa konteks/data mentah awal.\n"
-            "  - Mengapa data/proses tersebut belum bisa langsung digunakan.\n"
-            "  - Tampilkan diagram alur konseptual sederhana (misal ASCII diagram):\n"
-            "    Raw Input → Processing Stage 1 → Transformation → Stage 2 → Final Output / Model\n"
-            "  - Jelaskan secara ringkas peran tiap tahapan sebelum masuk ke pembahasan detail.\n\n"
-            "=================================================================\n"
-            " CONTOH TERHITUNG HARUS BENAR-BENAR DIKERJAKAN (FULLY WORKED)\n"
-            "=================================================================\n\n"
-            "Setiap contoh terhitung/matematis DILARANG berhenti di tengah jalan.\n"
-            "CONTOH BURUK (TIDAK BOLEH): 'Diberikan [20, 30, 50], Xmin = 20 dan Xmax = 50. Gunakan rumus (X - Xmin)/(Xmax - Xmin).'\n"
-            "CONTOH BAIK (WAJIB DIIKUTI):\n"
-            "> [!contoh]\n"
-            "> **Worked Example: Min-Max Scaling**\n"
-            "> Diketahui data: `[20, 30, 50]`. Nilai $X_{min} = 20$ dan $X_{max} = 50$.\n"
-            "> Rumus: $X_{scaled} = \\frac{X - X_{min}}{X_{max} - X_{min}}$\n"
-            ">\n"
-            "> - Untuk 20: $\\frac{20 - 20}{50 - 20} = \\frac{0}{30} = 0$\n"
-            "> - Untuk 30: $\\frac{30 - 20}{50 - 20} = \\frac{10}{30} \\approx 0.33$\n"
-            "> - Untuk 50: $\\frac{50 - 20}{50 - 20} = \\frac{30}{30} = 1$\n"
-            ">\n"
-            "> Hasil Akhir Ter-scale: `[0, 0.33, 1]`\n"
-            "> *Penjelasan:* Nilai terkecil menjadi 0, terbesar menjadi 1, dan nilai di antaranya dipetakan secara proporsional.\n\n"
-            "Siswa HARUS bisa mengulangi perhitungan ini secara mandiri.\n\n"
-            "=================================================================\n"
-            " ATURAN BAGIAN MANDATORI (JANGAN PERNAH KOSONG)\n"
-            "=================================================================\n\n"
-            "1. ### Tujuan Pembelajaran (WAJIB, TERISI, AKTURAT)\n"
-            "   > [!tujuan]\n"
-            "   > Setelah mempelajari materi ini, kamu akan bisa:\n"
-            "   > - [ ] [Tujuan terukur dengan kata kerja konkret: Menjelaskan / Mengidentifikasi / Menghitung / Menerapkan / Membandingkan]\n"
-            "   > - [ ] [Tujuan 2]\n"
-            "   > - [ ] [Tujuan 3]\n"
-            "   DILARANG menghasilkan sub-heading kosong tanpa bullet point!\n\n"
-            "2. ### Ringkasan & Poin Kunci (WAJIB, TERISI, PENUH PENGETAHUAN)\n"
-            "   > [!ingat]\n"
-            "   > **Poin Kunci:**\n"
-            "   > - [Ringkasan substansial 1: fakta/konsep inti]\n"
-            "   > - [Ringkasan 2: rumus/perbedaan utama]\n"
-            "   > - [Ringkasan 3: peringatan/miskonsepsi utama]\n"
-            "   DILARANG menghasilkan ringkasan kosong atau kalimat motivasi generik!\n\n"
-            "=================================================================\n"
-            " KESALAHAN UMUM & DATA LEAKAGE\n"
-            "=================================================================\n\n"
-            "Saat membahas miskonsepsi/kesalahan umum, tunjukkan pembandingan workflow BURUK vs BENAR beserta alasannya.\n"
-            "Contoh (Data Preprocessing):\n"
-            "  ❌ Workflow Buruk: Entire Dataset → Fit Scaler → Train/Test Split (Menyebabkan Data Leakage!)\n"
-            "  ✅ Workflow Benar: Entire Dataset → Train/Test Split → Fit Scaler pada Train → Transform Train & Test\n"
-            "  *Penjelasan:* Mengapa workflow kedua mencegah data leakage.\n\n"
-            "=================================================================\n"
-            " NADA & GAYA BAHASA: TUTOR UNIVERSITAS BERKUALITAS TINGGI\n"
-            "=================================================================\n\n"
-            "- TONE: Ramah, jelas, terstruktur, dan akademis secara akurat (seperti tutor universitas favorit).\n"
-            "- BUKAN Chatbot Motivasi (Hindari filler berulang: 'Semua dari nol', 'Jangan menyerah', 'Kamu pasti bisa!').\n"
-            "- BUKAN Buku Teks Kering (Jangan langsung membuang rumus & definisi tanpa intuisi dan alur).\n"
-            "- Gunakan analogi maksimal 1 yang kuat per konsep sulit, dan SELALU hubungkan dengan mekanisme teknis sebenarnya.\n\n"
-            "=================================================================\n"
-            " VALIDASI VIDEO YOUTUBE (SANGAT KETAT)\n"
-            "=================================================================\n\n"
-            "- Berikan saran video HANYA jika ID YouTube 11-karakter PASTI VALID DAN BENAR-BENAR RELEVAN EDUKATIF dengan topik ini.\n"
-            "- ID valid SAJA TIDAK CUKUP: video harus secara nyata dan akurat membahas materi ini.\n"
-            "- Jika relevansi atau ID tidak bisa dipastikan 100%, WAJIB kembalikan array kosong: \"videos\": [].\n"
-            "- DILARANG mengarang ID YouTube atau menyertakan URL pencarian.\n\n"
-            "=================================================================\n"
-            " ATURAN FORMAT MARKDOWN\n"
-            "=================================================================\n\n"
-            "- Gunakan Callouts (`>[!tujuan]`, `>[!contoh]`, `>[!coba]`, `>[!ingat]`, `>[!perhatian]`, `>[!quiz]`, `>[!tip]`).\n"
-            "- Gunakan kode block, tabel, dan diagram ASCII untuk keterbacaan tinggi.\n"
-            "- Bebas karakter escape aneh (jangan gunakan backslash di depan markdown).\n"
+            f"1. CAKUPAN TOPIK LENGKAP ({step_title}):\n"
+            "   - Identifikasi SELURUH cakupan topik/langkah ini. Jika judulnya mencakup beberapa subtopik utama "
+            "     (misal Data Preprocessing & Feature Engineering mencakup Data Cleaning, Transformation/Scaling, Encoding, Feature Engineering, Feature Selection, Dimensionality Reduction, dan Data Leakage), "
+            "     MAKA kamu WAJIB memberikan gambaran dan penjelasan bertahap untuk SELURUH subtopik tersebut!\n"
+            "   - DILARANG menghabiskan seluruh materi hanya untuk 1 sub-teknik kecil (misalnya hanya Feature Scaling saja), kecuali jika judul langkah memang sangat spesifik.\n\n"
+            "2. ATURAN ANTI-DUMMY / ANTI-PLACEHOLDER (SANGAT KETAT):\n"
+            "   - Sebuah bagian TIDAK LENGKAP hanya karena judulnya ada! Setiap bagian yang dibuat HARUS berisi konten nyata yang mengajarkan.\n"
+            "   - DILARANG membuat header/callout kosong tanpa isi di bawahnya (misal `>[!tujuan]` tanpa bullet point, "
+            "     atau `Langkah Perhitungan:` tanpa deretan hitungan, atau `Pembahasan & Jawaban:` tanpa solusi).\n"
+            "   - Jika kamu membuat `Langkah Perhitungan:`, kamu WAJIB menuliskan hitungan matematikanya selangkah demi selangkah sampai hasil akhir!\n"
+            "   - Jika kamu membuat `Pembahasan & Jawaban:`, kamu WAJIB menyertakan langkah penyelesaian dan jawaban akhirnya secara tegas!\n"
+            "   - Jika kamu membuat `>[!tujuan]`, kamu WAJIB menyertakan minimal 3-5 poin tujuan terukur dengan kata kerja konkret!\n"
+            "   - Jika kamu membuat `>[!ingat]`, kamu WAJIB menyertakan minimal 3-5 poin ringkasan pengetahuan substansial!\n\n"
+            "3. WORKED EXAMPLE HARUS BENAR-BENAR DIKERJAKAN (FULLY WORKED):\n"
+            "   - Tuliskan data awal, rumus/algoritma, substitusi nilai untuk SETIAP elemen data, hitungan langkah demi langkah, dan hasil akhirnya.\n"
+            "   - Siswa harus bisa mengulangi perhitungan ini secara mandiri tanpa membutuhkan sumber tambahan.\n\n"
+            "4. TRY IT YOURSELF (`>[!coba]`):\n"
+            "   - Berikan SOAL latihan yang jelas + PEMBAHASAN LENGKAP (langkah penalaran, hitungan, jawaban akhir, dan alasan kebenarannya) yang dipisahkan garis `---`.\n\n"
+            "5. PETA MENTAL (MENTAL MAP FIRST):\n"
+            "   - Buka materi dengan diagram alur (ASCII flowchart) yang memetakan bagaimana seluruh subtopik saling terhubung.\n\n"
+            "6. VALIDASI VIDEO YOUTUBE:\n"
+            "   - Berikan video HANYA jika ID YouTube 11-karakter PASTI VALID dan BENAR-BENAR RELEVAN EDUKATIF. Jika ragu, kembalikan `\"videos\": []`.\n"
         )
 
         lesson_sys_prompt = (
             "Kamu adalah Buddio, AI Mentor & Tutor Pembelajaran terkemuka yang bertugas MENGAJAR siswa step-by-step.\n\n"
-            "Prinsip Inti: Keutamaan Pedagogis (Instructional Completeness, Not Information Density).\n"
-            "Prioritas: Keakuratan → Pemahaman Bertahap (Sederhana → Teknis → Praktis) → Penerapan → Latihan → Keterlibatan.\n\n"
-            "Peranmu adalah sebagai Tutor Universitas Berkualitas Tinggi: jelaskan intuisi sebelum definisi formal, "
-            "bawa siswa melalui alur belajar 10-langkah untuk konsep utama, kerjakan contoh hitungan secara tuntas dari awal hingga akhir, "
-            "dan pastikan Tujuan Pembelajaran serta Ringkasan TIDAK PERNAH KOSONG.\n\n"
-            "Pastikan materi disesuaikan secara bijak dengan jenjang siswa dan kompleksitas topik. "
-            "Sajikan video YouTube HANYA bila relevansi edukatifnya terjamin (kembalikan [] bila tidak yakin)."
+            "Prinsip Inti: Keutamaan Pembelajaran & Kelengkapan Konten (Instructional Completeness).\n"
+            "Prioritas: Keakuratan → Pemahaman Bertahap (Sederhana → Teknis → Praktis) → Penerapan → Latihan.\n\n"
+            "Aturan Emas:\n"
+            "- Petakan seluruh cakupan topik secara seimbang, jangan mempersempit topik luas hanya menjadi satu sub-teknik kecil.\n"
+            "- DILARANG menghasilkan header atau callout kosong di bawahnya tanpa isi/perhitungan/jawaban yang lengkap.\n"
+            "- Contoh hitungan (worked example) harus dikerjakan tuntas dari awal hingga angka akhir.\n"
+            "- Latihan `>[!coba]` harus berisi soal DAN jawaban/pembahasan lengkap."
         )
 
         try:
             data = _generate_json(prompt, max_tokens=8192, system_instruction=lesson_sys_prompt)
-            data.setdefault("content", "")
+            raw_content = data.get("content", "")
+            data["content"] = _sanitize_and_validate_lesson_content(raw_content, step_title, topic_title)
             data.setdefault("videos", [])
             return data, "gemini"
         except Exception as exc:  # noqa: BLE001

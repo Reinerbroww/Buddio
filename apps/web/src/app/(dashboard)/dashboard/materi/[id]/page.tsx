@@ -25,6 +25,7 @@ import { useHighlights } from "@/hooks/useHighlights";
 import { HIGHLIGHT_COLORS } from "@/lib/highlight-types";
 import { useLanguage } from "@/context/LanguageContext";
 import HighlightableContent from "@/components/highlight/HighlightableContent";
+import UnderstandingCheck from "@/components/materi/UnderstandingCheck";
 
 function extractYouTubeId(url: string): string | null {
   const patterns = [
@@ -175,10 +176,22 @@ function MateriPageContent() {
     }
   };
 
+  const askBuddio = (prompt: string) => {
+    if (!lesson) return;
+    router.push(`/dashboard/mentor?topic=${lesson.topic_id ?? ""}&prompt=${encodeURIComponent(prompt)}`);
+  };
+
   const handleTanyaBuddio = () => {
     if (!lesson) return;
     const ctx = `Aku sedang belajar materi "${lesson.step_title}" dalam topik "${lesson.topic_title}". `;
-    router.push(`/dashboard/mentor?topic=${lesson.topic_id ?? ""}&prompt=${encodeURIComponent(ctx)}`);
+    askBuddio(ctx + t("materi.promptJelaskanMateri", { step: lesson.step_title ?? "" }));
+  };
+
+  const handleAskHighlight = (text: string, demand: string) => {
+    if (!lesson) return;
+    const ctx = `Aku sedang belajar materi "${lesson.step_title}" dalam topik "${lesson.topic_title}". `;
+    const sel = text.length > 400 ? text.slice(0, 400) + "..." : text;
+    askBuddio(ctx + `Tolong ${demand} bagian ini dari materi: "${sel}"`);
   };
 
   const scrollToHighlight = (color: string) => {
@@ -196,7 +209,8 @@ function MateriPageContent() {
   };
 
   const hasRichContent = lesson?.content && (lesson.content.includes("## ") || lesson.content.length > 500);
-  const videos = lesson?.video_urls ?? [];
+  const rawVideos = lesson?.video_urls ?? [];
+  const videos = rawVideos.filter((v) => extractYouTubeId(v.url ?? "") !== null);
   const yellowCount = highlights.filter((h) => h.color === "yellow").length;
   const greenCount = highlights.filter((h) => h.color === "green").length;
   const blueCount = highlights.filter((h) => h.color === "blue").length;
@@ -307,8 +321,25 @@ function MateriPageContent() {
               onUpdateColor={updateColor}
               onRemove={removeHighlight}
               enabled={highlightMode}
+              onAskHighlight={handleAskHighlight}
+            />
+            <UnderstandingCheck
+              stepTitle={lesson.step_title}
+              topicTitle={lesson.topic_title}
+              onAsk={askBuddio}
             />
           </div>
+
+          {rawVideos.length > 0 && videos.length === 0 && (
+            <div className="bg-white dark:bg-[#1e293b] border border-slate-100 dark:border-[#334155] rounded-2xl p-5 sm:p-7 flex items-center gap-4">
+              <div className="w-11 h-11 rounded-2xl bg-slate-100 dark:bg-[#0f172a] flex items-center justify-center shrink-0">
+                <Video className="w-5 h-5 text-slate-400 dark:text-slate-500" />
+              </div>
+              <div className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                {t("materi.noVideo")}
+              </div>
+            </div>
+          )}
 
           {videos.length > 0 && (
             <div className="bg-white dark:bg-[#1e293b] border border-slate-100 dark:border-[#334155] rounded-2xl p-5 sm:p-7 space-y-5">

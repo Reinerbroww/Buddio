@@ -1,16 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { StickyNote, X } from "lucide-react";
+import { StickyNote, X, Lightbulb, ListChecks, Scale } from "lucide-react";
 import { HIGHLIGHT_COLORS, type HighlightColor } from "@/lib/highlight-types";
 
 interface HighlightPopupProps {
   selectedText: string;
   onHighlight: (color: HighlightColor, note: string) => void;
+  onAsk?: (text: string, demand: string) => void;
   onClose: () => void;
 }
 
-export default function HighlightPopup({ selectedText, onHighlight, onClose }: HighlightPopupProps) {
+export default function HighlightPopup({ selectedText, onHighlight, onAsk, onClose }: HighlightPopupProps) {
   const [note, setNote] = useState("");
   const [showNote, setShowNote] = useState(false);
 
@@ -25,6 +26,27 @@ export default function HighlightPopup({ selectedText, onHighlight, onClose }: H
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
+
+        {onAsk && (
+          <div className="space-y-1.5">
+            <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Pelajari lebih jauh</p>
+            <div className="grid grid-cols-3 gap-1.5">
+              <button onClick={() => onAsk(selectedText, "jelaskan")} className="flex flex-col items-center gap-1 py-2 rounded-xl border border-[#4F8EF7]/20 bg-[#4F8EF7]/8 hover:bg-[#4F8EF7]/15 transition-all" title="Jelaskan bagian ini">
+                <Lightbulb className="w-3.5 h-3.5 text-[#4F8EF7]" />
+                <span className="text-[9px] font-semibold text-slate-600 dark:text-slate-300">Jelaskan</span>
+              </button>
+              <button onClick={() => onAsk(selectedText, "contoh")} className="flex flex-col items-center gap-1 py-2 rounded-xl border border-emerald-500/20 bg-emerald-50/60 dark:bg-emerald-500/10 hover:bg-emerald-500/20 transition-all" title="Beri contoh">
+                <ListChecks className="w-3.5 h-3.5 text-emerald-600" />
+                <span className="text-[9px] font-semibold text-slate-600 dark:text-slate-300">Contoh</span>
+              </button>
+              <button onClick={() => onAsk(selectedText, "lebih dalam")} className="flex flex-col items-center gap-1 py-2 rounded-xl border border-violet-500/20 bg-violet-50/60 dark:bg-violet-500/10 hover:bg-violet-500/20 transition-all" title="Pelajari lebih dalam">
+                <Scale className="w-3.5 h-3.5 text-violet-600" />
+                <span className="text-[9px] font-semibold text-slate-600 dark:text-slate-300">Mendalam</span>
+              </button>
+            </div>
+            <div className="h-px bg-slate-100 dark:bg-[#334155]" />
+          </div>
+        )}
 
         <div className="grid grid-cols-4 gap-1.5">
           {(Object.keys(HIGHLIGHT_COLORS) as HighlightColor[]).map((c) => {

@@ -312,23 +312,7 @@ def mock_lesson(step_title: str, topic_title: str) -> dict:
             f"tanya ke Kak Buddio di Mentor AI. Nggak ada pertanyaan yang "
             f"bodoh — yang bodoh itu kalau nggak tanya sama sekali! 😊"
         ),
-        "videos": [
-            {
-                "title": f"Penjelasan Dasar {step_title}",
-                "url": "https://www.youtube.com/watch?v=rfscVS0vtbw",
-                "description": f"Video penjelasan dasar tentang {step_title} untuk pemula."
-            },
-            {
-                "title": f"Pembahasan Mendalam {step_title}",
-                "url": "https://www.youtube.com/watch?v=fNk_zzaMoSs",
-                "description": f"Video pembahasan lebih dalam mengenai {step_title}."
-            },
-            {
-                "title": f"Latihan Soal {step_title}",
-                "url": "https://www.youtube.com/watch?v=3LPJfIKxwWc",
-                "description": f"Video latihan soal tentang {step_title}."
-            },
-        ],
+        "videos": [],
     }
 
 

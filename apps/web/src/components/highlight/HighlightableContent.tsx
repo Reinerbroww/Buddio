@@ -31,6 +31,8 @@ const CALLOUT_TYPES: Record<string, { bg: string; border: string; icon: string; 
   quiz:      { bg: "bg-indigo-50",  border: "border-indigo-400",  icon: "🎯", label: "Quiz" },
   tujuan:    { bg: "bg-teal-50",    border: "border-teal-400",    icon: "🎯", label: "Tujuan Pembelajaran" },
   prasyarat: { bg: "bg-slate-50",   border: "border-slate-400",   icon: "📋", label: "Prasyarat" },
+  coba:      { bg: "bg-violet-50",  border: "border-violet-400",  icon: "✏️", label: "Coba Sendiri" },
+  hubung:    { bg: "bg-cyan-50",    border: "border-cyan-400",    icon: "🔗", label: "Hubungan Antar Konsep" },
 };
 
 function parseCallout(text: string): { type: string; body: string } | null {
@@ -155,8 +157,27 @@ marked.setOptions({
   renderer: new MateriRenderer(),
 });
 
+function cleanMarkdown(md: string): string {
+  let out = md;
+  // Unescape stray backslashes before common markdown punctuation (fixes \* \** \[ \] \# \_ \>
+  // that some generators emit, which otherwise render as literal characters to the student).
+  out = out.replace(/\\([*_#>\\])/g, "$1");
+  out = out.replace(/\\\[/g, "[").replace(/\\\]/g, "]");
+  // Convert any callout syntax whose type isn't supported into a plain blockquote so raw
+  // "> [!note]" text never leaks. Supported types are rendered by the blockquote renderer.
+  out = out.replace(
+    /^(\s*)>\s*\[!([a-zA-Z0-9_]+)\]\s*(.*)$/gm,
+    (_m, indent, type: string, rest) => {
+      if (CALLOUT_TYPES[type.toLowerCase()]) return _m;
+      const body = rest ? ` ${rest}` : "";
+      return `${indent}> ${body}`;
+    }
+  );
+  return out;
+}
+
 function mdToHtml(md: string): string {
-  return marked.parse(md) as string;
+  return marked.parse(cleanMarkdown(md)) as string;
 }
 
 interface HighlightableContentProps {
@@ -166,6 +187,7 @@ interface HighlightableContentProps {
   onUpdateNote: (id: string, note: string) => void;
   onUpdateColor: (id: string, color: HighlightColor) => void;
   onRemove: (id: string) => void;
+  onAskHighlight?: (text: string, demand: string) => void;
   className?: string;
   enabled?: boolean;
 }
@@ -185,6 +207,7 @@ export default function HighlightableContent({
   onUpdateNote,
   onUpdateColor,
   onRemove,
+  onAskHighlight,
   className = "",
   enabled = true,
 }: HighlightableContentProps) {
@@ -355,6 +378,7 @@ export default function HighlightableContent({
           <HighlightPopup
             selectedText={popup.text}
             onHighlight={handleHighlight}
+            onAsk={onAskHighlight}
             onClose={() => setPopup(null)}
           />
         </div>

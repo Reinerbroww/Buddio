@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { marked, type Tokens } from "marked";
+import katex from "katex";
+import "katex/dist/katex.min.css";
 
 type TokenText = { text: string };
 
@@ -157,6 +159,47 @@ marked.setOptions({
   renderer: new MateriRenderer(),
 });
 
+// --- Math (LaTeX via KaTeX) ---
+
+type MathItem = { latex: string; display: boolean };
+
+/** $...$ / $$...$$ LaTeX math is extracted and hidden behind opaque tokens so the
+ *  markdown parser and text cleaners never mangle backslashes, underscores or carets
+ *  inside formulas. Restored later with KaTeX. */
+function protectMath(md: string): { text: string; math: MathItem[] } {
+  const math: MathItem[] = [];
+  const text = md.replace(
+    /\$\$([\s\S]+?)\$\$|\$([^\n$]+?)\$/g,
+    (full, displayLatex: string | undefined, inlineLatex: string | undefined) => {
+      if (displayLatex !== undefined) {
+        math.push({ latex: displayLatex.trim(), display: true });
+      } else {
+        math.push({ latex: (inlineLatex ?? "").trim(), display: false });
+      }
+      return `\u0000MATH${math.length - 1}\u0000`;
+    }
+  );
+  return { text, math };
+}
+
+function renderMath(latex: string, display: boolean): string {
+  try {
+    const html = katex.renderToString(latex, { displayMode: display, throwOnError: false });
+    return display
+      ? `<div class="materi-math-block">${html}</div>`
+      : `<span class="materi-math-inline">${html}</span>`;
+  } catch {
+    return display ? `<div class="materi-math-block"></div>` : "";
+  }
+}
+
+function restoreMath(html: string, math: MathItem[]): string {
+  return html.replace(/\u0000MATH(\d+)\u0000/g, (_m, idx: string) => {
+    const item = math[Number(idx)];
+    return item ? renderMath(item.latex, item.display) : "";
+  });
+}
+
 function cleanMarkdown(md: string): string {
   let out = md;
   // Drop unusable diagram code fences (mermaid/svg) and raw <svg> blocks entirely.
@@ -230,7 +273,9 @@ function sanitizeHtml(html: string): string {
 }
 
 function mdToHtml(md: string): string {
-  return sanitizeHtml(marked.parse(cleanMarkdown(md)) as string);
+  const { text, math } = protectMath(md);
+  const parsed = sanitizeHtml(marked.parse(cleanMarkdown(text)) as string);
+  return restoreMath(parsed, math);
 }
 
 interface HighlightableContentProps {

@@ -159,10 +159,15 @@ marked.setOptions({
 
 function cleanMarkdown(md: string): string {
   let out = md;
+  // Drop unusable diagram code fences (mermaid/svg) and raw <svg> blocks entirely.
+  out = out.replace(/```(?:mermaid|svg)\b[\s\S]*?```/gi, "");
+  out = out.replace(/<svg[\s\S]*?<\/svg>/gi, "");
   // Unescape stray backslashes before common markdown punctuation (fixes \* \** \[ \] \# \_ \>
   // that some generators emit, which otherwise render as literal characters to the student).
-  out = out.replace(/\\([*_#>\\])/g, "$1");
+  out = out.replace(/\\([*_#>\\|[\]{}~!^$+-.])/g, "$1");
   out = out.replace(/\\\[/g, "[").replace(/\\\]/g, "]");
+  // Collapse empty emphasis markers left behind.
+  out = out.replace(/\*\*\s*\*\*/g, "").replace(/\*\s*\*/g, "");
   // Convert any callout syntax whose type isn't supported into a plain blockquote so raw
   // "> [!note]" text never leaks. Supported types are rendered by the blockquote renderer.
   out = out.replace(
@@ -173,11 +178,59 @@ function cleanMarkdown(md: string): string {
       return `${indent}> ${body}`;
     }
   );
+  // Remove [ ! ... ] callout tokens that appear arbitrarily mid-text but not as blockquote.
+  out = out.replace(/\[![a-zA-Z0-9_-]+\]/g, "");
+  return out;
+}
+
+/** Strip stray characters from plain rendered text so students never see raw Markdown. */
+function cleanText(text: string): string {
+  // Stray artifacts in plain (non-code) rendered text: backslashes, emphasis markers,
+  // and callout tokens. Underscores are preserved (they appear in identifiers).
+  let s = text.replace(/\\/g, "");
+  // Collapse double+ asterisks (bold artifacts), then drop any asterisk that is not
+  // multiplication (so "2*3" survives but "*text*" / "a * b" stars are removed).
+  s = s.replace(/\*{2,}/g, "");
+  s = s.replace(/(^|[^\s*])\*(?!\S)/g, "$1").replace(/(^|\s)\*+(?=\s|$)/g, (_m) => _m.replace(/\*/g, " "));
+  s = s.replace(/\[!([a-z0-9_-]+)\]/gi, " ").replace(/ {2,}/g, " ").trim();
+  return s;
+}
+
+/** Remove disallowed raw HTML and stray Markdown artifacts, preserving code blocks. */
+function sanitizeHtml(html: string): string {
+  const protectedBlocks: string[] = [];
+  let out = html
+    // Protect code so we never strip '*' etc. inside code blocks / inline code.
+    .replace(/<pre>[\s\S]*?<\/pre>/gi, (m) => {
+      protectedBlocks.push(m);
+      return `\u0000${protectedBlocks.length - 1}\u0000`;
+    })
+    .replace(/<code[^>]*>[\s\S]*?<\/code>/gi, (m) => {
+      protectedBlocks.push(m);
+      return `\u0000${protectedBlocks.length - 1}\u0000`;
+    });
+  // Remove raw HTML that must never render.
+  out = out
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<svg[\s\S]*?<\/svg>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<iframe[\s\S]*?<\/iframe>/gi, "")
+    .replace(/<object[\s\S]*?<\/object>/gi, "")
+    .replace(/<embed[\s\S]*?>/gi, "")
+    .replace(/\son\w+="[^"]*"/gi, "")
+    .replace(/\son\w+='[^']*'/gi, "")
+    .replace(/(href|src)\s*=\s*"javascript:[^"]*"/gi, "")
+    .replace(/(href|src)\s*=\s*'javascript:[^']*'/gi, "");
+  // Clean stray Markdown artifacts in non-code text (code was protected above).
+  // Walk text segments (between tags) so we keep the surrounding tags intact.
+  out = out.replace(/>([^<>]*)</g, (_m, text: string) => `>${cleanText(text)}<`);
+  // Restore protected code blocks.
+  out = out.replace(/\u0000(\d+)\u0000/g, (_m, idx: string) => protectedBlocks[Number(idx)] || "");
   return out;
 }
 
 function mdToHtml(md: string): string {
-  return marked.parse(cleanMarkdown(md)) as string;
+  return sanitizeHtml(marked.parse(cleanMarkdown(md)) as string);
 }
 
 interface HighlightableContentProps {

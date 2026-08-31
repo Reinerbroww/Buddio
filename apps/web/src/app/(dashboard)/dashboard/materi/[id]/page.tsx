@@ -171,7 +171,10 @@ function MateriPageContent() {
     setCompleting(true);
     try {
       await api.patch(`/lessons/${lesson.id}/complete`);
-    } catch {} finally {
+      // Auto-return to the Roadmap after the lesson is marked complete.
+      const topic = lesson.topic_id ? `?topic=${encodeURIComponent(lesson.topic_id)}` : "";
+      router.push(`/dashboard/roadmap${topic}`);
+    } catch {
       setCompleting(false);
     }
   };

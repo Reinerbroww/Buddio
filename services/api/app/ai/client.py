@@ -5,6 +5,7 @@ rule-based mock generators so the app always works end-to-end.
 """
 import json
 import logging
+import re
 from typing import List, Dict, Optional, Tuple
 
 from app.core.config import settings
@@ -130,7 +131,65 @@ def _generate_json(prompt: str, max_tokens: int = 2048, temperature: float = 0.6
         text = text.strip("`")
         if text.startswith("json"):
             text = text[4:]
-    return json.loads(text)
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        # Long, rich content occasionally contains raw control characters (a literal
+        # newline/tab) or unescaped LaTeX backslashes (`\eta`, `\sqrt`, ...) inside a
+        # JSON string. Strict json.loads rejects both, so retry with a lenient parser
+        # that repairs control characters and invalid backslash escapes found inside
+        # string literals while leaving structural whitespace untouched.
+        return json.loads(_repair_json_strings(text))
+
+
+def _repair_json_strings(text: str) -> str:
+    """Repair common JSON string defects produced by the model.
+
+    Runs only when strict ``json.loads`` already failed. Restores:
+    - raw control characters (literal newline/tab) inside a string -> ``\\uXXXX``
+    - a backslash before a non-JSON-escape character (e.g. unescaped LaTeX ``\\eta``,
+      ``\\sqrt``, ``\\mu``) so it survives parsing as the literal ``\\eta`` etc.
+
+    Valid JSON escapes (``\\"``, ``\\\\``, ``\\/``, ``\\b``, ``\\f``, ``\\n``,
+    ``\\r``, ``\\t``, ``\\uXXXX``) are kept as-is so real newlines/tabs are never
+    mangled. Structural whitespace outside strings is untouched.
+    """
+    valid_escapes = '"\\/bfnrtu'
+    out = []
+    in_string = False
+    i = 0
+    n = len(text)
+    while i < n:
+        ch = text[i]
+        if in_string:
+            if ch == "\\":
+                nxt = text[i + 1] if i + 1 < n else ""
+                if nxt and nxt in valid_escapes:
+                    out.append(ch)
+                    out.append(nxt)
+                    i += 2
+                else:
+                    out.append("\\\\")
+                    if nxt:
+                        out.append(nxt)
+                    i += 2
+                continue
+            if ch == '"':
+                in_string = False
+                out.append(ch)
+                i += 1
+                continue
+            if ch < " " or ch == "\x7f":
+                out.append("\\u%04x" % ord(ch))
+            else:
+                out.append(ch)
+            i += 1
+        else:
+            if ch == '"':
+                in_string = True
+            out.append(ch)
+            i += 1
+    return "".join(out)
 
 
 def _sanitize_and_validate_lesson_content(content: str, step_title: str, topic_title: str) -> str:
@@ -336,52 +395,92 @@ class BuddioAI:
             "  ]\n"
             "}\n\n"
             "=================================================================\n"
-            " SYARAT UTAMA: INSTRUCTIONAL COMPLETENESS & BREADTH OF TOPIC\n"
+            " SYARAT UTAMA: MATERI PANJANG, LENGKAP, & MENGAJAR SEPERTI TUTOR 1-ON-1\n"
             "=================================================================\n\n"
-            f"1. CAKUPAN TOPIK LENGKAP ({step_title}):\n"
-            "   - Identifikasi SELURUH cakupan topik/langkah ini. Jika judulnya mencakup beberapa subtopik utama "
-            "     (misal Data Preprocessing & Feature Engineering mencakup Data Cleaning, Transformation/Scaling, Encoding, Feature Engineering, Feature Selection, Dimensionality Reduction, dan Data Leakage), "
-            "     MAKA kamu WAJIB memberikan gambaran dan penjelasan bertahap untuk SELURUH subtopik tersebut!\n"
-            "   - DILARANG menghabiskan seluruh materi hanya untuk 1 sub-teknik kecil (misalnya hanya Feature Scaling saja), kecuali jika judul langkah memang sangat spesifik.\n\n"
-            "2. ATURAN ANTI-DUMMY / ANTI-PLACEHOLDER (SANGAT KETAT):\n"
-            "   - Sebuah bagian TIDAK LENGKAP hanya karena judulnya ada! Setiap bagian yang dibuat HARUS berisi konten nyata yang mengajarkan.\n"
-            "   - DILARANG membuat header/callout kosong tanpa isi di bawahnya (misal `>[!tujuan]` tanpa bullet point, "
-            "     atau `Langkah Perhitungan:` tanpa deretan hitungan, atau `Pembahasan & Jawaban:` tanpa solusi).\n"
-            "   - Jika kamu membuat `Langkah Perhitungan:`, kamu WAJIB menuliskan hitungan matematikanya selangkah demi selangkah sampai hasil akhir!\n"
-            "   - Jika kamu membuat `Pembahasan & Jawaban:`, kamu WAJIB menyertakan langkah penyelesaian dan jawaban akhirnya secara tegas!\n"
-            "   - Jika kamu membuat `>[!tujuan]`, kamu WAJIB menyertakan minimal 3-5 poin tujuan terukur dengan kata kerja konkret!\n"
-            "   - Jika kamu membuat `>[!ingat]`, kamu WAJIB menyertakan minimal 3-5 poin ringkasan pengetahuan substansial!\n\n"
-            "3. WORKED EXAMPLE HARUS BENAR-BENAR DIKERJAKAN (FULLY WORKED):\n"
-            "   - Tuliskan data awal, rumus/algoritma, substitusi nilai untuk SETIAP elemen data, hitungan langkah demi langkah, dan hasil akhirnya.\n"
-            "   - Siswa harus bisa mengulangi perhitungan ini secara mandiri tanpa membutuhkan sumber tambahan.\n\n"
-            "4. TRY IT YOURSELF (`>[!coba]`):\n"
-            "   - Berikan SOAL latihan yang jelas + PEMBAHASAN LENGKAP (langkah penalaran, hitungan, jawaban akhir, dan alasan kebenarannya) yang dipisahkan garis `---`.\n\n"
-            "5. PETA MENTAL (MENTAL MAP FIRST):\n"
-            "   - Buka materi dengan diagram alur (ASCII flowchart) yang memetakan bagaimana seluruh subtopik saling terhubung.\n\n"
-            "6. VALIDASI VIDEO YOUTUBE:\n"
-            "   - Berikan video HANYA jika ID YouTube 11-karakter PASTI VALID dan BENAR-BENAR RELEVAN EDUKATIF. Jika ragu, kembalikan `\"videos\": []`.\n"
+            "@@>1. PANJANG & KEDALAMAN (WAJIB):\n"
+            "   - Tuliskan materi(step) ini SECARA PANJANG, LENGKAP, dan MENDALAM. Target panjang 20.000-35.000 karakter "
+            "     (kira-kira 2.500-4.500 kata), dibagi ke banyak bagian/heading (## dan ###).\n"
+            "   - DILARANG membuat materi singkat/ringkas seperti rangkuman. Tulislah seolah kamu sedang mengajari satu siswa "
+            "     secara langsung: jelaskan detail, berikan konteks, dan bimbing pelan-pelan.\n"
+            "   - Setiap konsep/subtopik mendapat penjelasan menjelaskan dengan paragraf naratif yang mengalir, bukan cuma poin-poin.\n\n"
+            "@@>2. POLA MENGAJAR SEPERTI GURU/TUTOR (JANGAN TERBURU-BURU):\n"
+            "   - Buka dengan PEMBUKA yang hangat: hubungkan langkah ini dengan pengetahuan yang sudah dimiliki siswa, "
+            "     beri gambaran 'kenapa/langkah apa yang akan kita pelajari', dan buat siswa penasaran.\n"
+            "   - Ajar MENGAMBIL SATU KONSEP DULU, baru lanjut ke yang berikutnya. Untuk tiap konsep gunakan alur:\n"
+            "        a. INTUISI dulu (cerita/analogi/pengalaman sehari-hari) dengan bahasa sederhana,\n"
+            "        b. lalu definisi / penjelasan teknis yang akurat,\n"
+            "        c. lalu 'kenapa ini penting' dan di mana dipakai,\n"
+            "        d. lalu contoh spesifik yang dikerjakan tuntas.\n"
+            "   - Gunakan KALIMAT TRANSISI antar bagian (misal: 'Sekarang kita telah memahami X, mari kita lihat bagaimana Y bekerja').\n"
+            "   - Selipkan PERTANYAAN PEMERIKSAAN PEMAHAMAN di sela-sela (misal: 'Sebelum lanjut, coba tebak apa akibatnya...'), "
+            "     lalu beri jawabannya.\n"
+            "   - Anggap siswa belum tahu apa-apa tentang langkah ini; jangan pernah mengasumsikan pengetahuan yang tidak diberikan.\n\n"
+            "@@>3. CAKUPAN TOPIK LENGKAP:\n"
+            "   - Identifikasi SELURUH subtopik dari langkah ini dan jelaskan semuanya secara bertahap. Jangan hanya menyorot 1 sub-teknik "
+            "     kecil (misal langkah Data Preprocessing harus mencakup Data Cleaning, Scaling, Encoding, Feature Engineering, Feature Selection, dll).\n\n"
+            "@@>4. WORKED EXAMPLE DIKERJAKAN TUNTAS (minimal 2-3 contoh per langkah):\n"
+            "   - Untuk tiap contoh nyata: tuliskan data awal, rumus/algoritma, substitusi nilai SETIAP elemen, hitungan langkah demi langkah, "
+            "     dan hasil akhir, lengkap dengan interpretasi.\n"
+            "   - Siswa harus bisa mengulangi perhitungannya sendiri tanpa sumber lain.\n"
+            "   - Contoh untuk fisika/matematika bisa berupa perhitungan; untuk pemrograman berupa kode + penjelasan baris per baris.\n\n"
+            "@@>5. BUILT-IN PENYEBAB MISKONSEPSI & KESALAHAN UMUM:\n"
+            "   - Ada bagian khusus yang membahas 3-5 kesalahan umum / miskonsepsi yang SANGAT SPESIFIK dengan penjelasan mengapa salah "
+            "     dan bagaimana cara yang benar (misal data leakage, off-by-one, lupa konversi satuan, dll).\n\n"
+            "@@>6. JUMLAH & JENIS CALLOUT (pakai setidaknya ini):\n"
+            "   - `>[!tujuan]` minimal 4-6 poin tujuan terukur di awal.\n"
+            "   - `>[!contoh]` untuk setiap worked example.\n"
+            "   - `>[!coba]` berisi soal latihan + pembahasan lengkap (pisahkan soal dan pembahasan dengan `---` di dalamnya).\n"
+            "   - `>[!ingat]` ringkasan minimal 5-7 poin pengetahuan substansial di akhir.\n"
+            "   - `>[!perhatian]` untuk kesalahan umum/miskonsepsi.\n"
+            "   - `>[!hubung]` (opsional) untuk menghubungkan antar konsep bila relevan.\n\n"
+            "@@>7. ANTI-DUMMY / ANTI-PLACEHOLDER (SANGAT KETAT):\n"
+            "   - DILARANG header/callout kosong tanpa isi di bawahnya. Setiap bagian WAJIB ada konten nyata yang mengajarkan.\n"
+            "   - Jika membuat perhitungan, tuliskan DERETAN hitungan sampai hasil akhir. Jika membuat pembahasan, tulis JAWABAN + alasan.\n\n"
+            "@@>8. BAHASA & GAYA:\n"
+            "   - Tulis dalam Bahasa Indonesia yang alami dan hangat seperti guru yang sabar, tetap akurat dan tidak bertele-tele tanpa isi.\n"
+            "   - Pastikan setiap kalimat berguna (jika dihapus, siswa kehilangan pengetahuan). Teks padat materi, bukan sekadar kata-kata pengisi.\n\n"
+            "@@>9. FORMAT MARKDOWN YANG DIPAKAI HANYA YANG DIDUKUNG:\n"
+            "   - Heading (##, ###), **tebal**, *miring*, -/1. list, tabel, ```code fence```, `inline code`, `> [!tipe]` callout dengan tipe: "
+            "     tujuan, contoh, coba, ingat, perhatian, hubung, prasyarat, tip, funfact, quiz.\n"
+            "   - Rumus matematika dalam $...$ (inline) dan $$...$$ (display). DILARANG memakai escape backslash yang aneh; gunakan LaTeX yang valid.\n"
+            "   - DILARANG menulis elemen HTML mentah seperti <svg>, <br>, dsb.\n\n"
+            "@@>10. VALIDASI VIDEO YOUTUBE:\n"
+            "   - Berikan video HANYA jika ID YouTube 11-karakter PASTI VALID dan SANGAT RELEVAN EDUKATIF. Jika ragu, `\"videos\": []`.\n"
         )
 
         lesson_sys_prompt = (
-            "Kamu adalah Buddio, AI Mentor & Tutor Pembelajaran terkemuka yang bertugas MENGAJAR siswa step-by-step.\n\n"
-            "Prinsip Inti: Keutamaan Pembelajaran & Kelengkapan Konten (Instructional Completeness).\n"
-            "Prioritas: Keakuratan → Pemahaman Bertahap (Sederhana → Teknis → Praktis) → Penerapan → Latihan.\n\n"
+            "Kamu adalah Buddio, AI Mentor & Tutor Pembelajaran terkemuka yang bertugas MENGAJAR siswa step-by-step secara personal, "
+            "seperti seorang guru yang sedang mengajari satu murid secara langsung: sabar, hangat, mendetail, dan tidak terburu-buru.\n\n"
+            "Prinsip Inti: Materi HARUS PANJANG, LENGKAP, dan MENDALAM (bukan rangkuman).\n"
+            "Prioritas: Keakuratan → Pemahaman Bertahap (Intuisi → Teknis → Praktis) → Penerapan → Latihan → Keterlibatan.\n\n"
             "Aturan Emas:\n"
-            "- Petakan seluruh cakupan topik secara seimbang, jangan mempersempit topik luas hanya menjadi satu sub-teknik kecil.\n"
-            "- DILARANG menghasilkan header atau callout kosong di bawahnya tanpa isi/perhitungan/jawaban yang lengkap.\n"
-            "- Contoh hitungan (worked example) harus dikerjakan tuntas dari awal hingga angka akhir.\n"
-            "- Latihan `>[!coba]` harus berisi soal DAN jawaban/pembahasan lengkap."
+            "- Ajarkan satu konsep pada satu waktu, dengan narasi yang mengalir seperti guru menjelaskan di kelas, lengkap dengan transisi.\n"
+            "- Jangan pernah menyingkat materi menjadi beberapa poin singkat; kembangkan setiap bagian dengan penjelasan lengkap.\n"
+            "- Berikan minimal 2-3 worked example yang dikerjakan tuntas sampai hasil akhir.\n"
+            "- Sertakan bagian miskonsepsi/kesalahan umum yang spesifik.\n"
+            "- Latihan `>[!coba]` berisi soal DAN pembahasan lengkap.\n"
+            "- Ringkasan `>[!ingat]` minimal 5-7 poin substansial.\n"
+            "- Target total konten 20.000-35.000 karakter (materi yang benar-benar full dan mengajar)."
         )
 
-        try:
-            data = _generate_json(prompt, max_tokens=8192, system_instruction=lesson_sys_prompt)
-            raw_content = data.get("content", "")
-            data["content"] = _sanitize_and_validate_lesson_content(raw_content, step_title, topic_title)
-            data.setdefault("videos", [])
-            return data, "gemini"
-        except Exception as exc:  # noqa: BLE001
-            logger.warning("Gemini lesson failed, falling back to mock: %s", exc)
-            return mock_ai.mock_lesson(step_title, topic_title), "mock"
+        # Long, rich generation (up to 16k tokens) is <100% reliable at emitting valid
+        # JSON — Gemini occasionally returns malformed structure (missing comma/brace)
+        # which a lenient string-repair cannot fix. Retry a few times before falling
+        # back to the coherent mock lesson so users rarely see a short generic reply.
+        last_exc: Optional[Exception] = None
+        for attempt in range(3):
+            try:
+                data = _generate_json(prompt, max_tokens=16384, system_instruction=lesson_sys_prompt)
+                raw_content = data.get("content", "")
+                if not raw_content or len(raw_content) < 400:
+                    raise ValueError("Generated lesson too short to be useful")
+                data["content"] = _sanitize_and_validate_lesson_content(raw_content, step_title, topic_title)
+                data.setdefault("videos", [])
+                return data, "gemini"
+            except Exception as exc:  # noqa: BLE001
+                last_exc = exc
+                logger.warning("Gemini lesson attempt %d failed: %s", attempt + 1, exc)
+        return mock_ai.mock_lesson(step_title, topic_title), "mock"
 
 
 buddio_ai = BuddioAI()

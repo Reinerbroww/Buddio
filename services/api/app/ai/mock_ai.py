@@ -378,489 +378,591 @@ def mock_chat(message: str, topic_title: str) -> str:
     return template.replace("{t}", topic_title)
 
 
+
 # ---------------------------------------------------------------------------
-# Lesson generation
+
+# ---------------------------------------------------------------------------
+# Full-length, tutorial-style lesson builder (mock fallback)
+#
+# Even when the AI API is unavailable, we still produce a long, teaching-like
+# materi (not a short summary). A shared skeleton guarantees warm tutor tone,
+# objectives, narrative sections, several fully-worked examples, misconceptions,
+# practise with full solutions, a summary and "next step" guidance. Subject
+# payloads inject the specific formulas/code/facts so content stays relevant.
+#
+# NOTE: All payload strings are PLAIN strings (not f-strings). They use the
+# literal placeholders {step} / {topic} which are substituted by _fill(), so
+# LaTeX braces (e.g. \frac{1}{2}, \text{ kg}, X_{min}) never collide with
+# Python's f-string brace interpolation.
 # ---------------------------------------------------------------------------
 
-def _physics_lesson(step: str, topic: str) -> dict:
-    return {
-        "content": (
-            f"### Alur Konseptual: {step}\n\n"
-            f"Dalam topik **{topic}**, langkah **{step}** merupakan fondasi yang harus dikuasai "
-            "sebelum melangkah ke konsep yang lebih kompleks.\n\n"
-            "---\n\n"
-            "> [!tujuan]\n"
-            f"> **Tujuan Pembelajaran — {step}:**\n"
-            f"> - [ ] **Menjelaskan** konsep inti {step} dan mengapa ini penting dalam {topic}.\n"
-            f"> - [ ] **Mengidentifikasi** variabel, rumus, dan satuan yang terlibat dalam {step}.\n"
-            f"> - [ ] **Menghitung** contoh soal terkait {step} secara mandiri langkah demi langkah.\n"
-            f"> - [ ] **Menganalisis** kesalahan umum dan batasan penerapan {step}.\n\n"
-            "---\n\n"
-            f"## Konsep {step}\n\n"
-            f"**{step}** dalam konteks {topic} menjelaskan bagaimana fenomena fisika ini bekerja "
-            "secara kuantitatif. Mari kita pahami dari sisi intuisi lalu masuk ke formalisme matematika.\n\n"
-            f"**Intuisi:** Bayangkan sebuah benda bergerak — untuk memahami {step}, kita perlu "
-            f"melihat bagaimana besaran fisika berubah seiring waktu atau kondisi.\n\n"
-            "**Formula Inti:**\n"
-            f"Kita akan menggunakan rumus utama terkait {step} untuk menghitung besaran fisika yang dicari.\n\n"
-            f"$$F = ma$$\n\n"
-            "Dimana:\n"
-            "- $F$ = Gaya (Newton)\n"
-            "- $m$ = Massa benda (kg)\n"
-            "- $a$ = Percepatan (m/s²)\n\n"
-            "---\n\n"
-            "> [!contoh]\n"
-            f"> **Worked Example: Perhitungan {step} Tuntas**\n"
-            ">\n"
-            "> **Diketahui:**\n"
-            "> - Massa benda: $m = 10 \\text{ kg}$\n"
-            "> - Percepatan: $a = 5 \\text{ m/s}^2$\n"
-            ">\n"
-            "> **Hitungan Langkah demi Langkah:**\n"
-            "> 1. **Identifikasi rumus:** $F = m \\times a$\n"
-            "> 2. **Substitusi nilai:** $F = 10 \\times 5 = 50 \\text{ N}$\n"
-            "> 3. **Interpretasi:** Benda dengan massa 10 kg yang dipercepat 5 m/s² membutuhkan gaya 50 Newton.\n"
-            ">\n"
-            "> **Hasil Akhir:** $F = 50 \\text{ N}$\n\n"
-            "---\n\n"
-            f"> [!coba]\n"
-            f"> **Soal Latihan — {step}:**\n"
-            "> Sebuah benda bermassa $m = 20 \\text{ kg}$ ditarik dengan gaya $F = 100 \\text{ N}$.\n"
-            "> Hitunglah percepatan benda tersebut!\n"
-            ">\n"
-            "> ---\n"
-            "> **Pembahasan:**\n"
-            "> 1. Rumus: $F = ma \\rightarrow a = \\frac{F}{m}$\n"
-            "> 2. Substitusi: $a = \\frac{100}{20} = 5 \\text{ m/s}^2$\n"
-            "> 3. **Jawaban:** Percepatan benda adalah $5 \\text{ m/s}^2$\n\n"
-            "---\n\n"
-            "> [!ingat]\n"
-            f"> **Ringkasan — {step}:**\n"
-            f"> - {step} menjelaskan hubungan antara besaran fisika dalam {topic}.\n"
-            "> - Selalu cek satuan sebelum menghitung agar tidak terjadi kesalahan konversi.\n"
-            "> - Rumus $F = ma$ berlaku untuk sistem tertutup tanpa gesekan.\n"
-            "> - Kesalahan paling umum: tidak mengonversi satuan ke SI sebelum substitusi.\n\n"
-            "---\n\n"
-            "> [!quiz]\n"
-            f"> **Soal 1:** Apa yang terjadi jika massa benda diperbesar 2 kali dengan gaya yang sama?\n"
-            "> **Soal 2:** Kapan rumus $F = ma$ tidak berlaku?\n"
-            ">\n"
-            "> ---\n"
-            "> **Jawaban:**\n"
-            "> 1. Percepatan menjadi setengahnya (invers proporsional terhadap massa).\n"
-            "> 2. Untuk benda yang bergerak mendekati kecepatan cahaya atau dalam medan gravitasi kuat."
-        ),
-        "videos": [],
+def _fill(s: str, step: str, topic: str) -> str:
+    return s.replace("{step}", step).replace("{topic}", topic)
+
+
+def _nm(s: str) -> str:
+    """Multiline plain text -> single-line value used inside callouts."""
+    return s.strip()
+
+
+def _full_lesson_common(step: str, topic: str, subject: dict) -> str:
+    def F(s: str) -> str:
+        return _fill(s, step, topic)
+
+    hook = F(subject["hook"])
+    approach = F(subject["approach"])
+    how1 = F(subject["how1"])
+    how2 = F(subject["how2"])
+    why = F(subject["why"])
+    applied = F(subject["applied"])
+    transition = F(subject["transition"])
+
+    examples = []
+    for ex in subject["examples"]:
+        rows = ["> **" + F(ex["label"]) + "**\n>"]
+        for i, l in enumerate(ex["body"], start=1):
+            rows.append("> **Langkah {}.** {}".format(i, F(l)))
+        examples.append("\n".join(rows))
+
+    miscon = []
+    for m in subject["misconceptions"]:
+        miscon.append(
+            "❌ **Salah:** {}\n✅ **Benar:** {}\n🧠 **Mengapa:** {}".format(
+                F(m["wrong"]), F(m["right"]), F(m["why"])
+            )
+        )
+
+    practice_q = F(subject["practice"]["q"])
+    practice_steps = [F(l) for l in subject["practice"]["steps"]]
+    practice_ans = F(subject["practice"]["ans"])
+
+    summary_rows = "\n".join("| **{}** | {} |".format(k, F(v)) for k, v in subject["summary"])
+
+    content_words = (
+        "Pada langkah ini, kita berjalan pelan-pelan dari nol menuju pemahaman "
+        "yang utuh. Jangan terburu-buru — setiap bagian dibangun di atas bagian "
+        "sebelumnya, persis seperti cara guru menjelaskan di depan kelas."
+    )
+
+    result = (
+        "### {}\n\n".format(step)
+        + hook
+        + "\n\n"
+        + content_words
+        + "\n\n---\n\n"
+        + "> [!tujuan]\n"
+        + "> Saat selesai mempelajari langkah **{}** ini, kamu akan mampu:\n".format(step)
+        + "> - [ ] **Menjelaskan** {}\n".format(approach)
+        + "> - [ ] **Mengidentifikasi** kapan dan bagaimana {}\n".format(why)
+        + "> - [ ] **Mengerjakan** hitungan/contoh {} secara tuntas langkah demi langkah\n".format(step)
+        + "> - [ ] **Menghindari** kesalahan umum yang sering membuat jawaban salah\n"
+        + "> - [ ] **Menerapkan** {}\n\n".format(applied)
+        + "---\n\n"
+        + "## 1. Mengapa {} Penting?\n\n".format(step)
+        + why
+        + "\n\nIntuisi singkatnya: "
+        + hook
+        + "\n\n---\n\n"
+        + "## 2. Konsep Inti: {}\n\n".format(step)
+        + how1
+        + "\n\n"
+        + how2
+        + "\n\n> [!hubung]\n> **Koneksi dalam {}:**\n".format(topic)
+        + "> - {} menjadi lebih mudah dipahami ketika kita menguasai {}.\n".format(topic, step)
+        + "> - Konsep ini menjadi prasyarat sebelum melangkah ke bagian lanjutan.\n"
+        + "> - {}\n\n".format(transition)
+        + "---\n\n"
+        + "## 3. Contoh Kerja Lengkap (Worked Example)\n\n"
+        + "Berikut beberapa contoh yang kita kerjakan bersama dari awal sampai hasil akhir. "
+        + "Baca perlahan, coba ulangi sendiri di kertas, lalu cocokkan.\n\n"
+        + "> [!contoh]\n"
+        + "\n\n---\n\n".join(examples)
+        + "\n\n---\n\n"
+        + "## 4. Kesalahan Umum & Miskonsepsi\n\n"
+        + "Banyak siswa tersandung di titik yang sama. Yuk kita periksa agar kamu tidak "
+        + "mengalami hal yang sama.\n\n"
+        + "> [!perhatian]\n"
+        + "\n\n".join(miscon)
+        + "\n\n---\n\n"
+        + "## 5. Coba Sendiri (Latihan)\n\n"
+        + "Sekarang giliranmu. Kerjakan dulu barulah buka pembahasannya.\n\n"
+        + "> [!coba]\n"
+        + "> **Soal:** {}\n".format(practice_q)
+        + "> **Petunjuk:**\n"
+        + "".join("> {}. {}\n".format(i, s) for i, s in enumerate(practice_steps, start=1))
+        + "> ---\n> **Pembahasan:**\n"
+        + "> {}\n\n".format(practice_ans)
+        + "---\n\n"
+        + "## 6. Ringkasan {}\n\n".format(step)
+        + "> [!ingat]\n"
+        + "> Poin-poin penting yang harus diingat:\n"
+        + "\n".join("> - **{}:** {}.".format(k, F(v)) for k, v in subject["summary"])
+        + "\n\n---\n\n"
+        + "## 7. Langkah Berikutnya\n\n"
+        + "Selamat! Kamu baru saja menyelesaikan langkah **{}**. Konsep ini akan kamu ".format(step)
+        + "pakai lagi pada langkah-langkah lanjutan dalam **{}**. Jika ada bagian yang ".format(topic)
+        + "masih terasa sulit, jangan ragu bertanya ke Buddio agar dijelaskan ulang dengan "
+        + "cara yang berbeda. Lanjutkan ke langkah berikutnya ketika kamu sudah yakin "
+        + "langkah ini benar-benar dikuasai. 🎯\n"
+    )
+
+    # The payload templates above were written with doubled braces (`{{`/`}}`)
+    # so they could never collide with Python's `.format()`/f-string machinery.
+    # Once interpolation is done, collapse them back to single LaTeX braces so
+    # e.g. `\frac{{1}}{{2}}` becomes the valid `\frac{1}{2}`.
+    return result.replace("{{", "{").replace("}}", "}")
+
+
+def _physics_full(step: str, topic: str) -> str:
+    subject = {
+        "hook": ("Pernahkah kamu bertanya mengapa {step} begitu penting dalam {topic}? "
+                 "Coba bayangkan sebuah benda yang {step} — di baliknya tersembunyi "
+                 "hukum fisika yang bisa kita hitung dan prediksi. Hari ini kita bongkar "
+                 "bersama, dari nol."),
+        "approach": "konsep inti {step} dan variabel fisika yang terlibat di dalamnya.",
+        "how1": ("**{step}** dalam {topic} berhubungan erat dengan besaran fisika seperti gaya, "
+                 "massa, percepatan, dan energi. Kunci utamanya: setiap perubahan keadaan "
+                 "sistem dapat dijelaskan oleh persamaan yang menghubungkan besaran-besaran ini."),
+        "how2": ("Untuk memahami {step} dengan benar, kita mulai dari definisi intuitif, lalu "
+                 "melihat rumusnya, lalu mencobanya pada angka nyata. Rumus inti yang sering "
+                 "dipakai: $F = m \\times a$ (untuk gaya) dan $E_k = \\frac{{1}}{{2}} m v^2$ "
+                 "(untuk energi kinetik)."),
+        "why": ("Menguasai {step} adalah syarat mutlak sebelum masuk ke materi fisika yang "
+                "lebih kompleks; tanpa fondasi ini, soal-soal lanjutan akan terasa membingungkan."),
+        "applied": "langkah ini pada soal fisika sehari-hari.",
+        "transition": "begitu kita paham {step}, kita bisa memecah masalah rumit menjadi bagian kecil yang lebih mudah.",
+        "examples": [
+            {
+                "label": "**Soal:** Sebuah benda bermassa $m = 10 \\text{{ kg}}$ diberi gaya $F = 50 \\text{{ N}}$. Hitung percepatannya!",
+                "body": [
+                    "Tuliskan yang diketahui: $m = 10 \\text{{ kg}}$, $F = 50 \\text{{ N}}$.",
+                    "Pilih rumus: $F = m \\times a$, sehingga $a = \\frac{{F}}{{m}}$.",
+                    "Substitusi angkanya: $a = \\frac{{50}}{{10}}$.",
+                    "Hitung: $a = 5 \\text{{ m/s}}^2$.",
+                    "Beri kesimpulan fisik: benda dipercepat sebesar $5 \\text{{ m/s}}^2$ searah gaya.",
+                ],
+            },
+            {
+                "label": "**Soal:** Energi kinetik mobil bermassa $m = 1000 \\text{{ kg}}$ yang melaju $v = 20 \\text{{ m/s}}$?",
+                "body": [
+                    "Diketahui: $m = 1000 \\text{{ kg}}$, $v = 20 \\text{{ m/s}}$.",
+                    "Rumus: $E_k = \\frac{{1}}{{2}} m v^2$.",
+                    "Substitusi: $E_k = \\frac{{1}}{{2}} \\times 1000 \\times 20^2$.",
+                    "Hitung: $E_k = 500 \\times 400 = 200000 \\text{{ J}}$.",
+                    "Kesimpulan: energi kinetiknya $200 \\text{{ kJ}}$ (200.000 J).",
+                ],
+            },
+        ],
+        "misconceptions": [
+            {"wrong": "Semakin besar gaya, kecepatan selalu bertambah sebanding.",
+             "right": "Gaya menyebabkan percepatan, bukan langsung kecepatan.",
+             "why": "Rumus $F = ma$ menghubungkan gaya dengan percepatan; kecepatan terus bertambah hanya selama gaya bekerja."},
+            {"wrong": "Satuan tidak perlu dikonversi dulu.",
+             "right": "Semua besaran harus dalam satuan SI sebelum substitusi.",
+             "why": "Jika $m$ dalam gram dan $v$ dalam km/jam, hasilnya salah besar."},
+        ],
+        "practice": {
+            "q": "Benda bermassa $m = 5 \\text{{ kg}}$ bergerak dengan kecepatan $v = 4 \\text{{ m/s}}$. Hitung energi kinetiknya!",
+            "steps": ["Tulis yang diketahui.", "Pilih rumus.", "Substitusi.", "Hitung.", "Tulis satuan."],
+            "ans": "$E_k = \\frac{{1}}{{2}} \\times 5 \\times 4^2 = \\frac{{1}}{{2}} \\times 5 \\times 16 = 40 \\text{{ J}}$. Jadi energi kinetik = 40 J.",
+        },
+        "summary": [
+            ("Inti", "{step} menjelaskan hubungan antar besaran fisika dalam {topic}"),
+            ("Rumus", "$F = ma$ dan $E_k = \\frac{{1}}{{2}} m v^2$ sering menjadi kunci"),
+            ("Satuan", "selalu konversi ke SI sebelum menghitung"),
+            ("Pola", "urangi masalah besar menjadi langkah kecil"),
+            ("Berlatih", "ulangi hitungan sendiri untuk menguatkan pemahaman"),
+        ],
     }
+    return _full_lesson_common(step, topic, subject)
 
 
-def _math_lesson(step: str, topic: str) -> dict:
-    return {
-        "content": (
-            f"### Alur Konseptual: {step}\n\n"
-            f"Dalam topik **{topic}**, langkah **{step}** merupakan teknik yang harus dikuasai "
-            "sebelum masuk ke topik yang lebih lanjut.\n\n"
-            "---\n\n"
-            "> [!tujuan]\n"
-            f"> **Tujuan Pembelajaran — {step}:**\n"
-            f"> - [ ] **Menjelaskan** definisi dan notasi {step} dalam konteks {topic}.\n"
-            f"> - [ ] **Mengidentifikasi** kapan teknik {step} boleh dan tidak boleh diterapkan.\n"
-            f"> - [ ] **Menghitung** contoh soal {step} secara tuntas dari awal hingga hasil akhir.\n"
-            f"> - [ ] **Menganalisis** kesalahan umum saat menerapkan {step}.\n\n"
-            "---\n\n"
-            f"## Konsep {step}\n\n"
-            f"**{step}** dalam {topic} membutuhkan pemahaman yang kuat tentang definisi, notasi, "
-            "dan sifat-sifat matematika yang mendasarinya.\n\n"
-            f"**Intuisi:** Bayangkan sebuah pola — {topic} membantu kita menemukan aturan tersembunyi "
-            "yang mengatur pola tersebut.\n\n"
-            "**Formula Utama:**\n\n"
-            "$$f(x) = x^2 + 2x + 1$$\n\n"
-            "Dimana:\n"
-            "- $f(x)$ = fungsi yang akan dianalisis\n"
-            "- $x$ = variabel input\n\n"
-            "---\n\n"
-            "> [!contoh]\n"
-            f"> **Worked Example: Perhitungan {step} Tuntas**\n"
-            ">\n"
-            "> **Diketahui:** $f(x) = x^2 + 2x + 1$, hitung nilai $f(3)$\n"
-            ">\n"
-            "> **Langkah demi Langkah:**\n"
-            "> 1. **Substitusi:** $f(3) = 3^2 + 2(3) + 1$\n"
-            "> 2. **Hitung:** $f(3) = 9 + 6 + 1 = 16$\n"
-            "> 3. **Hasil:** $f(3) = 16$\n\n"
-            "---\n\n"
-            "> [!coba]\n"
-            f"> **Soal Latihan — {step}:**\n"
-            "> Hitung nilai $f(x) = x^2 - 4x + 3$ untuk $x = 5$.\n"
-            ">\n"
-            "> ---\n"
-            "> **Pembahasan:**\n"
-            "> 1. Substitusi: $f(5) = 5^2 - 4(5) + 3$\n"
-            "> 2. Hitung: $f(5) = 25 - 20 + 3 = 8$\n"
-            "> 3. **Jawaban:** $f(5) = 8$\n\n"
-            "---\n\n"
-            "> [!ingat]\n"
-            f"> **Ringkasan — {step}:**\n"
-            f"> - {step} adalah teknik dasar dalam {topic} yang sering muncul di berbagai tipe soal.\n"
-            "> - Selalu perhatikan domain dan asumsi sebelum menerapkan teknik.\n"
-            "> - Kesalahan paling umum: kesalahan aljabar saat substitusi.\n\n"
-            "---\n\n"
-            "> [!quiz]\n"
-            f"> **Soal 1:** Kapan teknik {step} tidak boleh diterapkan?\n"
-            f"> **Soal 2:** Apa langkah verifikasi untuk memastikan hasil {step} benar?\n"
-            ">\n"
-            "> ---\n"
-            "> **Jawaban:**\n"
-            "> 1. Ketika syarat konvergensi atau domain tidak terpenuhi.\n"
-            "> 2. Substitusi ulang hasil ke persamaan semula dan cek konsistensi."
-        ),
-        "videos": [],
+def _math_full(step: str, topic: str) -> str:
+    subject = {
+        "hook": ("Dari sekian banyak topik matematika, **{step}** adalah salah satu yang paling "
+                 "sering muncul. Kabar baiknya: dengan pola yang benar, kamu bisa menyelesaikan "
+                 "soalnya secara konsisten. Mari kita pelajari polanya satu per satu."),
+        "approach": "definisi, notasi, dan kapan sebuah teknik {step} boleh dipakai.",
+        "how1": ("**{step}** pada {topic} dibangun dari definisi yang jelas dan sifat-sifat "
+                 "operasi. Kita perlu memahami *kenapa* sebuah aturan berlaku, bukan sekadar "
+                 "menghafal rumusnya."),
+        "how2": "Contoh bentuk yang sering kita temui: $f(x) = x^2 - 4x + 3$ atau $y = mx + c$. "
+                "Langkah menyelesaikannya selalu: pahami soal → terapkan aturan → periksa kembali.",
+        "why": "**{step}** menjadi alat bantu untuk menyelesaikan banyak permasalahan "
+               "matematis dan terapan, sehingga wajib dikuasai sebelum lanjut ke materi berikutnya.",
+        "applied": "teknik penyelesaian pada berbagai tipe soal {topic}.",
+        "transition": "pola pikir sistematis ini bisa kamu bawa ke semua soal lain, tidak hanya {step}.",
+        "examples": [
+            {
+                "label": "**Soal:** Diketahui $f(x) = 2x^2 + 3x - 5$. Hitung $f(2)$!",
+                "body": [
+                    "Tulis fungsi: $f(x) = 2x^2 + 3x - 5$.",
+                    "Ganti $x$ dengan 2: $f(2) = 2(2)^2 + 3(2) - 5$.",
+                    "Hitung pangkat: $2 \\times 4 + 6 - 5$.",
+                    "Operasikan: $8 + 6 - 5 = 9$.",
+                    "Jadi $f(2) = 9$.",
+                ],
+            },
+            {
+                "label": "**Soal:** Selesaikan persamaan $3x - 7 = 11$!",
+                "body": [
+                    "Persamaan: $3x - 7 = 11$.",
+                    "Pindah konstanta: $3x = 11 + 7 = 18$.",
+                    "Bagikan koefisien: $x = \\frac{{18}}{{3}}$.",
+                    "Sederhanakan: $x = 6$.",
+                    "Verifikasi: $3(6) - 7 = 18 - 7 = 11$ ✓ benar.",
+                ],
+            },
+        ],
+        "misconceptions": [
+            {"wrong": "Menghafal rumus lebih penting daripada memahami konsep.",
+             "right": "Memahami konsep membuat rumus mudah diingat dan diterapkan.",
+             "why": "Jika paham penalarannya, kamu tidak akan lupa kapan rumus dipakai."},
+            {"wrong": "Saat memindah ruas, tanda tidak dibalik.",
+             "right": "Setiap pindah ruas disertai pembalikan operasi (tambah↔kurang, kali↔bagi).",
+             "why": "Itu menjaga kesetaraan kedua ruas persamaan."},
+        ],
+        "practice": {
+            "q": "Diketahui fungsi $g(x) = x^2 + 5x + 6$. Carilah nilai $g(-1)$!",
+            "steps": ["Tulis fungsi.", "Substitusi nilai $x$.", "Hitung pangkat dan perkalian.", "Jumlahkan.", "Tulis hasil akhir."],
+            "ans": "$g(-1) = (-1)^2 + 5(-1) + 6 = 1 - 5 + 6 = 2$. Jadi $g(-1) = 2$.",
+        },
+        "summary": [
+            ("Definisi", "pahami notasi dan makna setiap variabel"),
+            ("Langkah", "selalu baca soal → terapkan aturan → periksa ulang"),
+            ("Verifikasi", "masukkan kembali hasil ke soal untuk cek kebenaran"),
+            ("Latihan", "kerjakan variasi soal agar pola tertanam kuat"),
+            ("Fondasi", "{step} adalah alat wajib untuk materi lanjutan"),
+        ],
     }
+    return _full_lesson_common(step, topic, subject)
 
 
-def _data_lesson(step: str, topic: str) -> dict:
-    return {
-        "content": (
-            f"### Alur Konseptual: {step}\n\n"
-            f"Dalam topik **{topic}**, langkah **{step}** merupakan tahap krusial yang menentukan "
-            "kualitas model machine learning.\n\n"
-            "---\n\n"
-            "> [!tujuan]\n"
-            f"> **Tujuan Pembelajaran — {step}:**\n"
-            f"> - [ ] **Menjelaskan** tujuan dan mekanisme {step} dalam pipeline {topic}.\n"
-            f"> - [ ] **Mengidentifikasi** jenis data yang membutuhkan {step}.\n"
-            f"> - [ ] **Menghitung** hasil {step} pada dataset contoh secara tuntas.\n"
-            f"> - [ ] **Menganalisis** dampak {step} terhadap performa model.\n"
-            f"> - [ ] **Mencegah** data leakage saat menerapkan {step}.\n\n"
-            "---\n\n"
-            f"## Konsep {step}\n\n"
-            f"**{step}** dalam konteks {topic} menjelaskan bagaimana data mentah diolah menjadi "
-            "siap pakai untuk pemodelan.\n\n"
-            "**Intuisi:** Bayangkan kamu membeli buah segar dari pasar. Sebelum dimasak, kamu harus "
-            "membuang bagian yang busuk dan mencucinya terlebih dahulu. Begitu pula data mentah — "
-            "perlu dibersihkan dan diolah sebelum masuk ke model.\n\n"
-            "**Teknik Utama — Min-Max Scaling:**\n\n"
-            "$$X_{scaled} = \\frac{X - X_{min}}{X_{max} - X_{min}}$$\n\n"
-            "---\n\n"
-            "> [!contoh]\n"
-            f"> **Worked Example: Perhitungan {step} Tuntas**\n"
-            ">\n"
-            "> **Diketahui:** Dataset $X = [20, 30, 50]$\n"
-            "> - $X_{min} = 20$, $X_{max} = 50$, Rentang = $30$\n"
-            ">\n"
-            "> **Langkah demi Langkah:**\n"
-            "> 1. $X = 20$: $\\frac{20 - 20}{30} = 0$\n"
-            "> 2. $X = 30$: $\\frac{30 - 20}{30} = \\frac{10}{30} \\approx 0.33$\n"
-            "> 3. $X = 50$: $\\frac{50 - 20}{30} = \\frac{30}{30} = 1$\n"
-            ">\n"
-            "> **Hasil:** `[0, 0.33, 1]`\n\n"
-            "---\n\n"
-            "> [!coba]\n"
-            f"> **Soal — {step}:**\n"
-            "> Dataset $X = [10, 20, 30, 40]$. Hitung Min-Max Scaling untuk $X = 25$.\n"
-            ">\n"
-            "> ---\n"
-            "> **Pembahasan:**\n"
-            "> 1. $X_{min} = 10$, $X_{max} = 40$, Rentang = $30$\n"
-            "> 2. $X_{scaled} = \\frac{25 - 10}{30} = \\frac{15}{30} = 0.5$\n"
-            "> 3. **Jawaban:** $0.5$\n\n"
-            "---\n\n"
-            "> [!perhatian]\n"
-            "> ❌ **Data Leakage:** Jangan fit scaler pada seluruh data sebelum split train/test!\n"
-            "> ✅ **Benar:** Split → Fit pada train → Transform train & test.\n\n"
-            "---\n\n"
-            "> [!ingat]\n"
-            f"> **Ringkasan — {step}:**\n"
-            f"> - {step} menentukan kualitas input model dalam {topic}.\n"
-            "> - Selalu fit transformer hanya pada data training.\n"
-            "> - Pilih teknik scaling berdasarkan distribusi data.\n\n"
-            "---\n\n"
-            "> [!quiz]\n"
-            f"> **Soal 1:** Mengapa kita tidak fit scaler pada seluruh data?\n"
-            "> **Soal 2:** Kapan StandardScaler lebih baik dari MinMaxScaler?\n"
-            ">\n"
-            "> ---\n"
-            "> **Jawaban:**\n"
-            "> 1. Karena scaler akan melihat data test, mengakibatkan data leakage.\n"
-            "> 2. Ketika data berdistribusi normal dan tidak ada outlier signifikan."
-        ),
-        "videos": [],
+def _data_full(step: str, topic: str) -> str:
+    subject = {
+        "hook": ("Dalam **{topic}**, kualitas hasil sangat ditentukan oleh kualitas data "
+                 "awalnya. **{step}** adalah tahap yang memastikan data kita benar-benar siap "
+                 "diolah model. Tanpa tahap ini, model rapi pun bisa menghasilkan prediksi "
+                 "yang menyesatkan."),
+        "approach": "tujuan {step} dan teknik yang dipakai agar data layak diolah model.",
+        "how1": ("**{step}** mencakup membersihkan data (nilai hilang, duplikat, outlier), "
+                 "transformasi nilai, dan encoding data kategori agar bisa dibaca algoritma."),
+        "how2": ("Salah satu teknik kunci adalah Min-Max Scaling, dengan rumus:\n\n"
+                 "$$X_{scaled} = \\frac{{X - X_{{min}}}}{{X_{{max}} - X_{{min}}}}$$"),
+        "why": "Menguasai {step} mencegah masalah seperti data leakage dan performa model yang buruk.",
+        "applied": "teknik scaling dan cleaning pada kumpulan data nyata.",
+        "transition": "data yang bersih membuat seluruh pipeline machine learning lebih andal.",
+        "examples": [
+            {
+                "label": "**Soal:** Dataset $X = [20, 30, 50]$. Terapkan Min-Max Scaling pada $X = 30$!",
+                "body": [
+                    "Tentukan nilai min dan max: $X_{min} = 20$, $X_{max} = 50$.",
+                    "Hitung rentang: $X_{max} - X_{min} = 50 - 20 = 30$.",
+                    "Substitusi ke rumus untuk $X = 30$: $\\frac{{30 - 20}}{{30}}$.",
+                    "Hitung: $\\frac{{10}}{{30}} \\approx 0.33$.",
+                    "Jadi nilai scaled untuk 30 adalah sekitar 0,33.",
+                ],
+            },
+            {
+                "label": "**Soal:** Dataset $X = [10, 20, 30, 40]$. Berapa nilai scaled untuk $X = 25$?",
+                "body": [
+                    "$X_{min} = 10$, $X_{max} = 40$, rentang = $40 - 10 = 30$.",
+                    "Substitusi: $\\frac{{25 - 10}}{{30}}$.",
+                    "Hitung: $\\frac{{15}}{{30}} = 0.5$.",
+                    "Jadi nilai scaled = 0,5.",
+                    "Interpretasi: 25 berada di tengah-tengah rentang data.",
+                ],
+            },
+        ],
+        "misconceptions": [
+            {"wrong": "Fitur scaler pada seluruh dataset sekaligus sebelum split train/test.",
+             "right": "Fit hanya pada data training, lalu transform pada train dan test.",
+             "why": "Kalau scaler melihat data test, terjadi data leakage dan hasil evaluasi menyesatkan."},
+            {"wrong": "Data kategori tidak perlu di-encode.",
+             "right": "Data kategori harus diubah (one-hot/label) agar algoritma bisa membacanya.",
+             "why": "Sebagian besar model hanya bekerja dengan bilangan."},
+        ],
+        "practice": {
+            "q": "Dataset $Y = [5, 15, 25]$. Hitung nilai Min-Max Scaling untuk $Y = 15$!",
+            "steps": ["Cari nilai min dan max.", "Hitung rentang.", "Substitusi ke rumus.", "Sederhanakan."],
+            "ans": "$Y_{min} = 5$, $Y_{max} = 25$, rentang = 20. $\\frac{{15 - 5}}{{20}} = \\frac{{10}}{{20}} = 0.5$.",
+        },
+        "summary": [
+            ("Peran", "{step} menentukan kualitas input model"),
+            ("Min-Max", "$X_{scaled} = (X - X_{min})/(X_{max} - X_{min})$"),
+            ("Leakage", "jangan pernah fit scaler pada data test"),
+            ("Bersih dulu", "tangani nilai hilang sebelum scaling"),
+            ("Kategori", "encode data kategori agar bisa diolah model"),
+        ],
     }
+    return _full_lesson_common(step, topic, subject)
 
 
-def _programming_lesson(step: str, topic: str) -> dict:
-    return {
-        "content": (
-            f"### Alur Konseptual: {step}\n\n"
-            f"Dalam topik **{topic}**, langkah **{step}** merupakan konsep yang harus dikuasai "
-            "untuk menulis kode yang efisien dan terstruktur.\n\n"
-            "---\n\n"
-            "> [!tujuan]\n"
-            f"> **Tujuan Pembelajaran — {step}:**\n"
-            f"> - [ ] **Menjelaskan** konsep {step} dan cara kerjanya dalam {topic}.\n"
-            f"> - [ ] **Mengidentifikasi** kapan menggunakan {step} dan kapan tidak.\n"
-            f"> - [ ] **Menerapkan** {step} dalam kode contoh secara langsung.\n"
-            f"> - [ ] **Menganalisis** kesalahan umum saat implementasi {step}.\n\n"
-            "---\n\n"
-            f"## Konsep {step}\n\n"
-            f"**{step}** dalam {topic} membantu kita menulis kode yang lebih rapi, efisien, "
-            "dan mudah dipelihara.\n\n"
-            "**Intuisi:** Pemrograman seperti membangun rumah — setiap balok harus diletakkan "
-            f"dengan benar agar strukturnya kokoh. {topic} adalah salah satu balok penting itu.\n\n"
-            "**Contoh Kode:**\n\n"
-            "```python\n"
-            "# Implementasi konsep langkah ini\n"
-            "def langkah_initi(data):\n"
-            '    """Fungsi untuk menerapkan konsep langkah ini"""\n'
-            "    hasil = []\n"
-            "    for item in data:\n"
-            "        # Proses setiap item\n"
-            "        hasil.append(item * 2)\n"
-            "    return hasil\n"
-            "```\n\n"
-            "---\n\n"
-            "> [!contoh]\n"
-            f"> **Worked Example — {step}:**\n"
-            ">\n"
-            "> ```python\n"
-            "> # Contoh penggunaan\n"
-            "> data = [1, 2, 3, 4, 5]\n"
-            "> hasil = langkah_initi(data)\n"
-            "> print(hasil)  # [2, 4, 6, 8, 10]\n"
-            "> ```\n"
-            ">\n"
-            "> **Penjelasan:**\n"
-            "> 1. Input: list `[1, 2, 3, 4, 5]`\n"
-            "> 2. Proses: setiap elemen dikalikan 2\n"
-            "> 3. Output: `[2, 4, 6, 8, 10]`\n\n"
-            "---\n\n"
-            "> [!coba]\n"
-            f"> **Tantangan — {step}:**\n"
-            "> Modifikasi fungsi di atas agar hanya memproses bilangan genap.\n"
-            ">\n"
-            "> ---\n"
-            "> **Solusi:**\n"
-            "> ```python\n"
-            "> def langkah_genap(data):\n"
-            ">     return [x * 2 for x in data if x % 2 == 0]\n"
-            "> ```\n\n"
-            "---\n\n"
-            "> [!ingat]\n"
-            f"> **Ringkasan — {step}:**\n"
-            f"> - {step} membantu menulis kode yang lebih terstruktur dalam {topic}.\n"
-            "> - Selalu berikan docstring untuk menjelaskan tujuan fungsi.\n"
-            "> - Gunakan list comprehension untuk kode yang lebih ringkas.\n\n"
-            "---\n\n"
-            "> [!quiz]\n"
-            f"> **Soal 1:** Kapan kamu sebaiknya menggunakan {step} vs pendekatan lain?\n"
-            "> **Soal 2:** Apa dampak performa dari penggunaan teknik ini pada data besar?\n"
-            ">\n"
-            "> ---\n"
-            "> **Jawaban:**\n"
-            f"> 1. Gunakan {step} ketika struktur data dan pola iterasi sudah jelas.\n"
-            "> 2. Perlu optimasi dengan teknik memoisasi atau lazy evaluation."
-        ),
-        "videos": [],
+def _programming_full(step: str, topic: str) -> str:
+    subject = {
+        "hook": ("Menulis kode yang benar itu seperti menyusun instruksi yang jelas. "
+                 "**{step}** pada {topic} mengajarkan kita cara menyusun logika yang rapi, "
+                 "mudah dibaca, dan mudah dipelihara."),
+        "approach": "konsep {step} dan kapan waktu yang tepat menggunakannya.",
+        "how1": "**{step}** membantu kita memecah masalah menjadi langkah kecil, menggunakan fungsi, perulangan, dan struktur data dengan tepat.",
+        "how2": ("Contohnya, kita bisa menulis fungsi yang memproses sekumpulan data. "
+                 "Perhatikan kode berikut (Python):\n\n"
+                 "```python\n"
+                 "def proses(data):\n"
+                 "    hasil = []\n"
+                 "    for item in data:\n"
+                 "        hasil.append(item * 2)\n"
+                 "    return hasil\n"
+                 "\n"
+                 "print(proses([1, 2, 3]))  # [2, 4, 6]\n"
+                 "```"),
+        "why": "Menguasai {step} membuat kode lebih bersih dan bug lebih mudah ditemukan.",
+        "applied": "pola penulisan kode yang terstruktur pada proyek {topic}.",
+        "transition": "struktur kode yang baik menjadi fondasi untuk fitur yang lebih besar.",
+        "examples": [
+            {
+                "label": "**Soal:** Modifikasi fungsi agar hanya memproses bilangan genap!",
+                "body": [
+                    "Mulai dari fungsi `proses(data)` yang ada.",
+                    "Tambahkan kondisi `if item % 2 == 0` di dalam perulangan.",
+                    "Sertakan hanya item genap ke `hasil`.",
+                    "Uji dengan `[1, 2, 3, 4]` → hasil `[2, 4]`.",
+                    "Simpulkan: kode sekarang lebih spesifik dan tetap rapi.",
+                ],
+            },
+            {
+                "label": "**Soal:** Tulis list comprehension untuk mengkuadratkan tiap elemen!",
+                "body": [
+                    "Bentuk umum: `[ekspresi for item in data]`.",
+                    "Tulis `[x**2 for x in data]`.",
+                    "Uji dengan `[1, 2, 3]` → hasil `[1, 4, 9]`.",
+                    "Bandingkan dengan versi perulangan biasa.",
+                    "Simpulkan keuntungan: lebih ringkas dan mudah dibaca.",
+                ],
+            },
+        ],
+        "misconceptions": [
+            {"wrong": "Semakin pendek kode selalu semakin baik.",
+             "right": "Kode yang jelas dan mudah dibaca lebih baik daripada sekadar pendek.",
+             "why": "Kode yang membingungkan sulit dipelihara dan rawan bug."},
+            {"wrong": "Nama variabel singkat seperti `x` selalu boleh.",
+             "right": "Gunakan nama deskriptif seperti `total_harga`.",
+             "why": "Nama yang jelas membuat maksud kode langsung terbaca."},
+        ],
+        "practice": {
+            "q": "Buat fungsi `kali_tiga(data)` yang mengalikan setiap elemen dengan 3, lalu panggil dengan `[1, 2, 3]`!",
+            "steps": ["Tulis definisi fungsi.", "Buat perulangan atau list comprehension.", "Kembalikan hasil.", "Cetak hasil pemanggilan."],
+            "ans": "`def kali_tiga(data): return [x * 3 for x in data]` → `print(kali_tiga([1,2,3]))` menghasilkan `[3, 6, 9]`.",
+        },
+        "summary": [
+            ("Fungsi", "pecah masalah menjadi fungsi kecil yang jelas"),
+            ("Struktur", "perulangan dan list comprehension untuk memproses data"),
+            ("Bersih", "nama variabel deskriptif dan docstring"),
+            ("Uji", "selalu uji dengan beberapa kasus"),
+            ("Perawatan", "kode rapi mudah dipelihara dalam jangka panjang"),
+        ],
     }
+    return _full_lesson_common(step, topic, subject)
 
 
-def _history_lesson(step: str, topic: str) -> dict:
-    return {
-        "content": (
-            f"### Alur Konseptual: {step}\n\n"
-            f"Dalam topik **{topic}**, langkah **{step}** merupakan bagian penting untuk memahami "
-            "konteks sejarah secara utuh.\n\n"
-            "---\n\n"
-            "> [!tujuan]\n"
-            f"> **Tujuan Pembelajaran — {step}:**\n"
-            f"> - [ ] **Menjelaskan** latar belakang dan penyebab {step} dalam konteks {topic}.\n"
-            f"> - [ ] **Mengidentifikasi** tokoh-tokoh kunci dan peran mereka dalam {step}.\n"
-            f"> - [ ] **Menguraikan** urutan kronologis peristiwa dalam {step}.\n"
-            f"> - [ ] **Menganalisis** dampak {step} terhadap perkembangan selanjutnya.\n\n"
-            "---\n\n"
-            f"## Latar Belakang {step}\n\n"
-            f"**{step}** dalam konteks {topic} tidak terjadi secara tiba-tiba. Ada berbagai faktor "
-            "sosial, politik, ekonomi, dan budaya yang mendorong terjadinya peristiwa ini.\n\n"
-            "**Kondisi Sebelumnya:**\n"
-            "- Faktor politik yang tidak stabil\n"
-            "- Pengaruh pihak asing / kolonial\n"
-            "- Ketidakpuasan masyarakat terhadap kondisi yang ada\n\n"
-            "**Tokoh-Tokoh Kunci:**\n"
-            f"Beberapa tokoh yang berperan penting dalam {step}:\n"
-            "- Tokoh utama: peran sebagai pemimpin / penggerak\n"
-            "- Tokoh pendukung: peran sebagai penyokong / pelaksana\n"
-            "- Tokoh penentang: peran sebagai penentang / hambatan\n\n"
-            "---\n\n"
-            "> [!contoh]\n"
-            f"> **Kronologi {step}:**\n"
-            ">\n"
-            "> 1. **Tahap Persiapan** — Kondisi yang mendahului peristiwa\n"
-            "> 2. **Tahap Pelaksanaan** — Peristiwa utama terjadi\n"
-            "> 3. **Tahap Akhir** — Hasil dan dampak langsung\n\n"
-            "---\n\n"
-            "> [!coba]\n"
-            f"> **Analisis — {step}:**\n"
-            f"> 1. Apa faktor utama yang menyebabkan {step} terjadi?\n"
-            f"> 2. Bagaimana {step} mempengaruhi kehidupan masyarakat pada masa itu?\n"
-            f"> 3. Apakah ada perspektif berbeda dari pihak yang berbeda tentang {step}?\n\n"
-            "---\n\n"
-            "> [!ingat]\n"
-            f"> **Ringkasan — {step}:**\n"
-            f"> - {step} dipengaruhi oleh berbagai faktor yang saling berkaitan.\n"
-            "> - Setiap peristiwa sejarah memiliki penyebab dan akibat yang kompleks.\n"
-            f"> - Memahami {step} membantu kita belajar dari pengalaman masa lalu.\n\n"
-            "---\n\n"
-            "> [!quiz]\n"
-            f"> **Soal 1:** Apa dampak jangka panjang dari {step}?\n"
-            f"> **Soal 2:** Bagaimana pandangan berbeda dari berbagai sejarawan tentang {step}?\n"
-            ">\n"
-            "> ---\n"
-            "> **Jawaban:**\n"
-            "> 1. Dampak jangka panjang mencakup perubahan struktur sosial dan politik.\n"
-            "> 2. Setiap sejarawan memiliki sudut pandang yang dipengaruhi latar belakangnya."
-        ),
-        "videos": [],
+def _cs_full(step: str, topic: str) -> str:
+    subject = {
+        "hook": ("Komputer menyelesaikan masalah dengan mengikuti langkah yang jelas dan "
+                 "terurut — tepat seperti **{step}** dalam {topic}. Memahami ini adalah "
+                 "kunci untuk berpikir seperti seorang ilmuwan komputer."),
+        "approach": "prinsip kerja {step} serta hubungannya dengan kompleksitas waktu dan ruang.",
+        "how1": ("**{step}** menggambarkan bagaimana sebuah proses dijalankan langkah demi "
+                 "langkah. Kita menuliskannya sebagai pseudocode atau diagram alur sebelum "
+                 "mengubahnya menjadi kode nyata."),
+        "how2": ("Contoh pseudocode sederhana:\n\n"
+                 "```\n"
+                 "ALGORITMA Proses(data):\n"
+                 "    hasil = kosong\n"
+                 "    UNTUK setiap elemen DALAM data:\n"
+                 "        tambahkan elemen ke hasil\n"
+                 "    KEMBALIKAN hasil\n"
+                 "```"),
+        "why": "Memahami {step} membantu kita memilih pendekatan yang efisien untuk masalah besar.",
+        "applied": "perancangan algoritma pada masalah {topic}.",
+        "transition": "cara berpikir algoritmik ini dipakai di hampir semua cabang ilmu komputer.",
+        "examples": [
+            {
+                "label": "**Soal:** Hitung kompleksitas waktu dari proses di atas untuk input $n$!",
+                "body": [
+                    "Perhatikan ada satu perulangan yang melewati seluruh elemen.",
+                    "Setiap elemen diproses satu kali.",
+                    "Jadi banyak langkah sebanding dengan $n$.",
+                    "Kompleksitasnya adalah $O(n)$ linear.",
+                    "Simpulan: waktu bertambah lurus mengikuti ukuran input.",
+                ],
+            },
+            {
+                "label": "**Soal:** Bagaimana jika ada dua perulangan bersarang?",
+                "body": [
+                    "Perulangan luar berjalan $n$ kali.",
+                    "Di dalamnya, perulangan dalam juga berjalan hingga $n$ kali.",
+                    "Total operasi ≈ $n \\times n = n^2$.",
+                    "Kompleksitasnya $O(n^2)$ kuadratik.",
+                    "Simpulan: untuk $n$ besar, waktu tumbuh cepat — hindari bila bisa.",
+                ],
+            },
+        ],
+        "misconceptions": [
+            {"wrong": "Algoritma yang benar pasti selalu efisien.",
+             "right": "Benar dan efisien adalah dua hal berbeda.",
+             "why": "Algoritma bisa benar tetapi lambat untuk data besar; efisiensi perlu dianalisis."},
+            {"wrong": "Kasus tepi (edge case) tidak penting.",
+             "right": "Menguji kasus tepi sangat penting untuk mencegah bug.",
+             "why": "Banyak bug muncul justru pada input kosong, satu elemen, atau nilai ekstrem."},
+        ],
+        "practice": {
+            "q": "Tulis pseudocode untuk mencari nilai terbesar dalam list $[3, 7, 2, 9]$, lalu sebutkan kompleksitasnya!",
+            "steps": ["Inisialisasi variabel `maks` dengan elemen pertama.", "Bandingkan satu per satu.", "Perbarui `maks` bila lebih besar.", "Kembalikan `maks`.", "Sebutkan kompleksitas."],
+            "ans": "`maks = 3`, bandingkan berturut-turut hingga ketemu 9, kompleksitas $O(n)$.",
+        },
+        "summary": [
+            ("Algoritma", "langkah jelas dan berurutan untuk memecahkan masalah"),
+            ("Pseudocode", "tulis logika dulu sebelum kode nyata"),
+            ("Kompleksitas", "$O(n)$ linear, $O(n^2)$ kuadratik, dst."),
+            ("Kasus tepi", "selalu uji input kosong dan ekstrem"),
+            ("Efisiensi", "pilih algoritma sesuai ukuran dan jenis data"),
+        ],
     }
+    return _full_lesson_common(step, topic, subject)
 
 
-def _cs_lesson(step: str, topic: str) -> dict:
-    return {
-        "content": (
-            f"### Alur Konseptual: {step}\n\n"
-            f"Dalam topik **{topic}**, langkah **{step}** merupakan konsep dasar yang harus dikuasai "
-            "sebelum melangkah ke implementasi yang lebih kompleks.\n\n"
-            "---\n\n"
-            "> [!tujuan]\n"
-            f"> **Tujuan Pembelajaran — {step}:**\n"
-            f"> - [ ] **Menjelaskan** prinsip kerja {step} dalam konteks {topic}.\n"
-            f"> - [ ] **Mengidentifikasi** kapan menggunakan {step} dalam pemecahan masalah.\n"
-            f"> - [ ] **Menerapkan** {step} dalam kode atau diagram alur.\n"
-            f"> - [ ] **Menganalisis** kompleksitas waktu dan ruang dari {step}.\n\n"
-            "---\n\n"
-            f"## Konsep {step}\n\n"
-            f"**{step}** dalam {topic} menjelaskan bagaimana komputer menyelesaikan masalah "
-            "dengan pendekatan sistematis.\n\n"
-            "**Intuisi:** Algoritma seperti resep masakan — langkah-langkah yang jelas, berurutan, "
-            "dan menghasilkan output yang dapat diprediksi dari input tertentu.\n\n"
-            "**Pseudocode:**\n\n"
-            "```\n"
-            "ALGORITMA Langkah_Initi(input):\n"
-            "    hasil = []\n"
-            "    UNTUK setiap elemen DALAM input:\n"
-            "        proses(elemen)\n"
-            "        tambahkan ke hasil\n"
-            "    KEMBALIKAN hasil\n"
-            "```\n\n"
-            "---\n\n"
-            "> [!contoh]\n"
-            f"> **Worked Example — {step}:**\n"
-            ">\n"
-            "> **Input:** `[3, 1, 4, 1, 5]`\n"
-            "> **Proses:**\n"
-            "> 1. elemen 3 → proses → hasil `[3]`\n"
-            "> 2. elemen 1 → proses → hasil `[3, 1]`\n"
-            "> 3. elemen 4 → proses → hasil `[3, 1, 4]`\n"
-            "> 4. elemen 1 → proses → hasil `[3, 1, 4, 1]`\n"
-            "> 5. elemen 5 → proses → hasil `[3, 1, 4, 1, 5]`\n"
-            ">\n"
-            "> **Kompleksitas:** Waktu $O(n)$, Ruang $O(n)$\n\n"
-            "---\n\n"
-            "> [!coba]\n"
-            f"> **Latihan — {step}:**\n"
-            "> Implementasikan algoritma di atas dalam Python. Modifikasi agar hanya memproses "
-            "> elemen yang lebih besar dari 2.\n"
-            ">\n"
-            "> ---\n"
-            "> **Solusi:**\n"
-            "> ```python\n"
-            "> def langkah_initi(data):\n"
-            ">     return [x for x in data if x > 2]\n"
-            "> ```\n\n"
-            "---\n\n"
-            "> [!ingat]\n"
-            f"> **Ringkasan — {step}:**\n"
-            f"> - {step} adalah pendekatan sistematis dalam {topic}.\n"
-            "> - Pertimbangkan kompleksitas waktu dan ruang saat memilih algoritma.\n"
-            "> - Selalu uji dengan kasus tepi (edge cases).\n\n"
-            "---\n\n"
-            "> [!quiz]\n"
-            f"> **Soal 1:** Bagaimana kompleksitas {step} berubah jika input berlipat ganda?\n"
-            f"> **Soal 2:** Apakah ada kasus di mana pendekatan alternatif lebih baik dari {step}?\n"
-            ">\n"
-            "> ---\n"
-            "> **Jawaban:**\n"
-            "> 1. Untuk $O(n)$, waktu juga berlipat ganda. Untuk $O(n^2)$, waktu naik 4x lipat.\n"
-            "> 2. Ya, untuk data terurut, pendekatan $O(n \\log n)$ bisa lebih optimal."
-        ),
-        "videos": [],
+def _history_full(step: str, topic: str) -> str:
+    subject = {
+        "hook": ("Setiap peristiwa besar tidak terjadi begitu saja. **{step}** dalam {topic} "
+                 "memiliki latar belakang, tokoh, dan dampak yang saling berkaitan. Memahami "
+                 "rangkaian ini membuat kita bisa membaca sejarah dengan lebih dalam."),
+        "approach": "latar belakang, kronologi, tokoh, dan dampak dari {step}.",
+        "how1": ("**{step}** terjadi karena kombinasi faktor politik, ekonomi, sosial, dan budaya. "
+                 "Untuk memahaminya, kita memetakan kondisi sebelum, selama, dan sesudahnya."),
+        "how2": ("Cara paling efektif: susun **kronologi** lengkap dari pemicu hingga akibatnya, "
+                 "lalu identifikasi peran setiap tokoh penting."),
+        "why": "Menguasai {step} membantu kita menarik pelajaran dari pengalaman masa lalu.",
+        "applied": "cara menganalisis peristiwa sejarah secara kronologis dan kritis.",
+        "transition": "pola sebab-akibat ini berlaku untuk hampir semua peristiwa sejarah lainnya.",
+        "examples": [
+            {
+                "label": "**Analisis:** Bagaimana cara mengurai {step} menjadi rangkaian sebab-akibat?",
+                "body": [
+                    "Petakan kondisi awal: faktor-faktor yang ada sebelum peristiwa.",
+                    "Identifikasi pemicu langsung yang membuat keadaan berubah.",
+                    "Susun urutan kejadian utama secara kronologis.",
+                    "Cari tokoh kunci dan peran masing-masing.",
+                    "Tulis dampak jangka pendek dan jangka panjang.",
+                ],
+            },
+            {
+                "label": "**Analisis:** Mengapa satu peristiwa bisa punya banyak tafsir?",
+                "body": [
+                    "Setiap sumber ditulis dari sudut pandang tertentu.",
+                    "Konteks sosial-politik memengaruhi cara penulisan.",
+                    "Latar belakang sejarawan ikut mewarnai interpretasi.",
+                    "Bandingkan beberapa sumber untuk melihat gambaran utuh.",
+                    "Simpulan: sejarah dibaca secara kritis, tidak tunggal.",
+                ],
+            },
+        ],
+        "misconceptions": [
+            {"wrong": "Sejarah hanya kumpulan tanggal dan nama.",
+             "right": "Sejarah adalah analisis sebab-akibat dan perubahan sosial.",
+             "why": "Menghafal tanggal saja tidak menjelaskan mengapa dan bagaimana."},
+            {"wrong": "Satu sumber sejarah sudah cukup.",
+             "right": "Idealnya membandingkan berbagai sumber yang berbeda.",
+             "why": "Satu sumber bisa bias; konfirmasi silang membuat kesimpulan lebih kuat."},
+        ],
+        "practice": {
+            "q": "Buat ringkasan tiga poin: (1) latar belakang, (2) satu peristiwa inti, (3) satu dampak dari {step}!",
+            "steps": ["Tulis latar belakang singkat.", "Pilih satu peristiwa inti paling penting.", "Tulis satu dampak nyata.", "Hubungkan ketiganya dalam satu kalimat."],
+            "ans": "Contoh: latar belakang = kondisi ketidakpuasan; peristiwa inti = momen kunci; dampak = perubahan struktur sosial-politik.",
+        },
+        "summary": [
+            ("Latar", "setiap peristiwa punya akar kondisi sosial-politik"),
+            ("Kronologi", "susun urutan untuk melihat benang merah"),
+            ("Tokoh", "peran tokoh memengaruhi jalannya peristiwa"),
+            ("Dampak", "bedakan pengaruh jangka pendek dan panjang"),
+            ("Kritis", "bandingkan sumber agar kesimpulan lebih kuat"),
+        ],
     }
+    return _full_lesson_common(step, topic, subject)
 
 
-def _general_lesson(step: str, topic: str) -> dict:
-    return {
-        "content": (
-            f"### Alur Konseptual: {step}\n\n"
-            f"Dalam topik **{topic}**, langkah **{step}** merupakan bagian penting yang harus "
-            "dipahami untuk membangun fondasi yang kuat.\n\n"
-            "---\n\n"
-            "> [!tujuan]\n"
-            f"> **Tujuan Pembelajaran — {step}:**\n"
-            f"> - [ ] **Menjelaskan** konsep inti {step} dalam konteks {topic}.\n"
-            f"> - [ ] **Mengidentifikasi** penerapan {step} dalam situasi nyata.\n"
-            f"> - [ ] **Menerapkan** teknik {step} pada contoh kasus secara step-by-step.\n"
-            f"> - [ ] **Menganalisis** batasan dan kesalahan umum dalam {step}.\n\n"
-            "---\n\n"
-            f"## Konsep {step}\n\n"
-            f"**{step}** dalam konteks {topic} menjelaskan prinsip-prinsip dasar yang perlu "
-            "dikuasai untuk memahami topik ini secara menyeluruh.\n\n"
-            f"**Intuisi:** {topic} adalah konsep yang bisa kita temukan dalam kehidupan sehari-hari, "
-            "meskipun sering kali tidak disadari.\n\n"
-            "**Contoh Konkret:**\n"
-            f"Bayangkan situasi sehari-hari yang melibatkan {step} — dari sinilah kita bisa "
-            "melihat betapa relevannya konsep ini dalam kehidupan nyata.\n\n"
-            "---\n\n"
-            "> [!contoh]\n"
-            f"> **Worked Example — {step}:**\n"
-            ">\n"
-            "> **Langkah 1:** Identifikasi masalah dan tentukan data yang tersedia.\n"
-            "> **Langkah 2:** Pilih pendekatan yang sesuai berdasarkan karakteristik data.\n"
-            "> **Langkah 3:** Terapkan teknik dan periksa hasilnya secara kritis.\n"
-            "> **Langkah 4:** Interpretasikan hasil dan hubungkan dengan teori.\n\n"
-            "---\n\n"
-            "> [!coba]\n"
-            f"> **Latihan — {step}:**\n"
-            f"> 1. Jelaskan dengan bahasamu sendiri apa itu {step}.\n"
-            f"> 2. Berikan satu contoh penerapan {step} dalam kehidupan nyata.\n"
-            f"> 3. Sebutkan satu kesalahan umum yang sering terjadi saat menerapkan {step}.\n\n"
-            "---\n\n"
-            "> [!ingat]\n"
-            f"> **Ringkasan — {step}:**\n"
-            f"> - {step} adalah fondasi penting dalam {topic}.\n"
-            "> - Pemahaman konsep lebih penting dari sekadar menghafal.\n"
-            "> - Latihan dan penerapan nyata memperkuat pemahaman.\n\n"
-            "---\n\n"
-            "> [!quiz]\n"
-            f"> **Soal 1:** Apa yang terjadi jika {step} tidak diterapkan dengan benar?\n"
-            f"> **Soal 2:** Bagaimana cara memverifikasi pemahaman tentang {step}?\n"
-            ">\n"
-            "> ---\n"
-            "> **Jawaban:**\n"
-            "> 1. Dampaknya bisa berupa kesalahan analisis atau hasil yang tidak akurat.\n"
-            "> 2. Mengerjakan soal berbagai tingkat dan mendiskusikan dengan orang lain."
-        ),
-        "videos": [],
+def _general_full(step: str, topic: str) -> str:
+    subject = {
+        "hook": ("**{step}** adalah potongan penting dari topik **{topic}**. Bahkan jika topik "
+                 "ini terasa luas, menguasai langkah ini selangkah demi selangkah akan membuat "
+                 "gambaran besarnya jauh lebih jelas."),
+        "approach": "konsep inti {step} dan penerapannya dalam {topic}.",
+        "how1": ("**{step}** pada {topic} membangun pemahaman yang akan kamu pakai terus. "
+                 "Kita mulai dari ide sederhana, lalu menambah lapisan detailnya pelan-pelan."),
+        "how2": ("Intinya: pahami *apa*, *mengapa*, dan *bagaimana*. Setelah itu coba terapkan "
+                 "pada satu contoh nyata agar konsep tidak hanya tertinggal di teori."),
+        "why": "{step} menjadi dasar untuk memahami bagian lain dari {topic}.",
+        "applied": "konsep {step} pada situasi nyata sehari-hari.",
+        "transition": "setiap konsep baru pada {topic} akan lebih mudah karena fondasimu sudah kuat.",
+        "examples": [
+            {
+                "label": "**Langkah berpikir:** Cara menerapkan {step} pada satu kasus nyata",
+                "body": [
+                    "Identifikasi masalah dan data yang kamu punya.",
+                    "Tentukan pendekatan yang paling sesuai.",
+                    "Terapkan konsep {step} langkah demi langkah.",
+                    "Periksa hasilnya secara kritis.",
+                    "Hubungkan kembali dengan teori dan simpulkan.",
+                ],
+            },
+            {
+                "label": "**Langkah berpikir:** Bagaimana memverifikasi bahwa pemahamanmu benar?",
+                "body": [
+                    "Jelaskan konsep dengan bahasamu sendiri.",
+                    "Beri satu contoh penerapan nyata.",
+                    "Timbulkan satu pertanyaan dan jawab sendiri.",
+                    "Minta penjelasan ulang bila ada bagian yang belum jelas.",
+                    "Kerjakan latihan untuk menguji ingatanmu.",
+                ],
+            },
+        ],
+        "misconceptions": [
+            {"wrong": "Menghafal istilah sama dengan memahami.",
+             "right": "Memahami berarti bisa menjelaskan dan menerapkan.",
+             "why": "Hafalan tanpa pemahaman mudah lupa dan sulit diterapkan pada kasus baru."},
+            {"wrong": "Membaca sekali cukup untuk menguasai.",
+             "right": "Membaca + mencoba + mengulang adalah cara terkuat.",
+             "why": "Pengulangan aktif memperkuat ingatan jangka panjang."},
+        ],
+        "practice": {
+            "q": "Jelaskan dengan bahasamu sendiri apa itu {step}, lalu beri satu contoh penerapannya dalam {topic}!",
+            "steps": ["Tulis definisi dengan kata sendiri.", "Beri satu contoh nyata.", "Sebutkan satu kesalahan umum."],
+            "ans": "Rumuskan definisi sederhana tentang {step}, beri contoh nyata relevan, dan ingat definisi + contoh + latihan membuat pemahaman kokoh.",
+        },
+        "summary": [
+            ("Fondasi", "{step} adalah dasar penting untuk memahami {topic}"),
+            ("Paham vs hafal", "pemahaman lebih kuat daripada sekadar hafalan"),
+            ("Praktik", "contoh nyata membuat konsep lebih mudah diingat"),
+            ("Tanya", "bertanya ke mentor mempercepat pemahaman"),
+            ("Ulang", "pengulangan aktif menguatkan ingatan"),
+        ],
     }
+    return _full_lesson_common(step, topic, subject)
 
 
 def mock_lesson(step_title: str, topic_title: str) -> dict:
     subject = _detect_subject(f"{step_title} {topic_title}")
     generators = {
-        "physics": _physics_lesson,
-        "math": _math_lesson,
-        "data": _data_lesson,
-        "programming": _programming_lesson,
-        "cs": _cs_lesson,
-        "history": _history_lesson,
+        "physics": _physics_full,
+        "math": _math_full,
+        "data": _data_full,
+        "programming": _programming_full,
+        "cs": _cs_full,
+        "history": _history_full,
+        "chemistry": _general_full,
+        "biology": _general_full,
+        "economics": _general_full,
+        "language": _general_full,
     }
-    gen = generators.get(subject, _general_lesson)
-    return gen(step_title, topic_title)
+    gen = generators.get(subject, _general_full)
+    return {"content": gen(step_title, topic_title), "videos": []}
+

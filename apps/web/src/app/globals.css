@@ -121,6 +121,11 @@ body {
   margin: 0;
 }
 
+.materi-content .materi-math-fallback {
+  font-style: italic;
+  color: var(--muted, inherit);
+}
+
 .materi-content h2 {
   position: relative;
 }

@@ -168,8 +168,16 @@ type MathItem = { latex: string; display: boolean };
  *  inside formulas. Restored later with KaTeX. */
 function protectMath(md: string): { text: string; math: MathItem[] } {
   const math: MathItem[] = [];
-  const text = md.replace(
-    /\$\$([\s\S]+?)\$\$|\$([^\n$]+?)\$/g,
+  // Normalize common LLM artifacts where a display formula is closed with an extra
+  // pair of dollars (e.g. `$$\frac{m_0}{...}$$$$`). Collapsing `$$$$` -> `$$` keeps
+  // the block balanced so the stray `$$` never leaks as raw text.
+  const normalized = md.replace(/\$\$\$\$+/g, () => "$$");
+  // Display math must be closed on the SAME line with `$$`. A greedy `[\s\S]+?` here lets
+  // a truncated/malformed closing (e.g. the model writes `...\text{ MeV}$|` with a lost `$`)
+  // swallow unrelated later content in a single giant token. Requiring `[^\n$]` keeps each
+  // block self-contained, so malformed formulas fail the match and degrade to plain text.
+  const text = normalized.replace(
+    /\$\$([^\n$]+?)\$\$|\$([^\n$]+?)\$/g,
     (full, displayLatex: string | undefined, inlineLatex: string | undefined) => {
       if (displayLatex !== undefined) {
         math.push({ latex: displayLatex.trim(), display: true });
@@ -183,13 +191,26 @@ function protectMath(md: string): { text: string; math: MathItem[] } {
 }
 
 function renderMath(latex: string, display: boolean): string {
+  // Never surface KaTeX's "parse error" markup to the student (it leaks raw `$`, `\`,
+  // `\frac` etc. when the model emits malformed math). Instead render cleanly, and on a
+  // parse error degrade the broken LaTeX into readable plain text rather than raw source.
   try {
-    const html = katex.renderToString(latex, { displayMode: display, throwOnError: false });
+    const html = katex.renderToString(latex, { displayMode: display, throwOnError: true });
     return display
       ? `<div class="materi-math-block">${html}</div>`
       : `<span class="materi-math-inline">${html}</span>`;
   } catch {
-    return display ? `<div class="materi-math-block"></div>` : "";
+    const readable = latex
+      .replace(/\\text{([^}]*)}/g, "$1")
+      .replace(/\\frac{([^}]*)}{([^}]*)}/g, "($1 / $2)")
+      .replace(/\\(?:left|right)\b/g, "")
+      .replace(/[{}\\]/g, "")
+      .replace(/[*_]/g, "")
+      .trim();
+    if (!readable) return display ? `<div class="materi-math-block"></div>` : "";
+    return display
+      ? `<div class="materi-math-block"><span class="materi-math-fallback">${readable}</span></div>`
+      : `<span class="materi-math-inline"><span class="materi-math-fallback">${readable}</span></span>`;
   }
 }
 
@@ -231,6 +252,7 @@ function cleanText(text: string): string {
   // Stray artifacts in plain (non-code) rendered text: backslashes, emphasis markers,
   // and callout tokens. Underscores are preserved (they appear in identifiers).
   let s = text.replace(/\\/g, "");
+  s = s.replace(/\$/g, "");
   // Collapse double+ asterisks (bold artifacts), then drop any asterisk that is not
   // multiplication (so "2*3" survives but "*text*" / "a * b" stars are removed).
   s = s.replace(/\*{2,}/g, "");

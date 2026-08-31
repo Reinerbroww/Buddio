@@ -192,13 +192,13 @@ function MentorPageContent() {
             {error}
           </div>
         )}
-        <div className="flex flex-col items-center justify-center text-center py-20 px-4 space-y-6 animate-in fade-in duration-300 bg-white border border-slate-100 rounded-2xl">
-          <div className="relative flex items-center justify-center w-16 h-16 rounded-full bg-slate-50 border border-slate-100">
+        <div className="flex flex-col items-center justify-center text-center py-20 px-4 space-y-6 animate-in fade-in duration-300 bg-white dark:bg-[#1e293b] border border-slate-100 dark:border-[#334155] rounded-2xl">
+          <div className="relative flex items-center justify-center w-16 h-16 rounded-full bg-slate-50 dark:bg-[#0f172a] border border-slate-100 dark:border-[#334155]">
             <GraduationCap className="w-8 h-8 text-[#4F8EF7]" />
           </div>
           <div className="space-y-2 max-w-sm">
-            <h3 className="text-base font-bold text-slate-900">{t("mentor.noTopicsTitle")}</h3>
-            <p className="text-xs text-slate-500 leading-relaxed">
+            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">{t("mentor.noTopicsTitle")}</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
               {t("mentor.noTopicsDesc")}
             </p>
           </div>
@@ -216,15 +216,15 @@ function MentorPageContent() {
 
   return (
     <div className="max-w-4xl mx-auto py-6 sm:py-8 space-y-8 animate-in fade-in duration-300">
-      <div className="flex items-center gap-3 border-b border-slate-100 pb-6">
+      <div className="flex items-center gap-3 border-b border-slate-100 dark:border-[#334155] pb-6">
         <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#4F8EF7] to-[#7C5CFF] text-white flex items-center justify-center shadow-md shadow-[#4F8EF7]/15 shrink-0">
           <Sparkles className="w-5 h-5" />
         </div>
         <div className="space-y-0.5">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight font-sans">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight font-sans">
             {t("mentor.title")}
           </h2>
-          <p className="text-sm text-slate-500 font-sans">
+          <p className="text-sm text-slate-500 dark:text-slate-400 font-sans">
             {t("mentor.subtitle")}
           </p>
         </div>
@@ -236,16 +236,16 @@ function MentorPageContent() {
         </div>
       )}
 
-      <div className="bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="bg-white dark:bg-[#1e293b] border border-slate-100 dark:border-[#334155] rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="space-y-1.5 min-w-0">
-          <label htmlFor="topic-select" className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+          <label htmlFor="topic-select" className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
             {t("mentor.pickTopic")}
           </label>
           <select
             id="topic-select"
             value={selectedTopicId ?? ""}
             onChange={(e) => setSelectedTopicId(Number(e.target.value))}
-            className="w-full sm:w-72 px-4 py-2.5 text-sm bg-slate-50 border border-slate-100 focus:border-[#4F8EF7] focus:bg-white rounded-xl outline-none transition-all text-slate-800 cursor-pointer"
+            className="w-full sm:w-72 px-4 py-2.5 text-sm bg-slate-50 dark:bg-[#0f172a] border border-slate-100 dark:border-[#334155] focus:border-[#4F8EF7] focus:bg-white dark:focus:bg-[#0f172a] rounded-xl outline-none transition-all text-slate-800 dark:text-slate-100 cursor-pointer"
           >
             {topics.map((tt) => (
               <option key={tt.id} value={tt.id}>
@@ -256,8 +256,8 @@ function MentorPageContent() {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           {remaining !== null && (
-            <span className="text-xs text-slate-600 bg-slate-50 border border-slate-100 rounded-full px-3 py-1.5">
-              {t("mentor.chatQuotaLeft")} <b className="text-slate-900">{remaining}</b>
+            <span className="text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-[#0f172a] border border-slate-100 dark:border-[#334155] rounded-full px-3 py-1.5">
+              {t("mentor.chatQuotaLeft")} <b className="text-slate-900 dark:text-slate-100">{remaining}</b>
             </span>
           )}
           {lastMode === "mock" && (
@@ -276,8 +276,8 @@ function MentorPageContent() {
         </div>
       </div>
 
-      <div className="bg-white border border-slate-100 rounded-2xl shadow-xs overflow-hidden">
-        <div className="h-[52vh] min-h-[360px] max-h-[560px] overflow-y-auto p-5 sm:p-6 bg-[#F8FAFC]/70 space-y-4">
+      <div className="bg-white dark:bg-[#1e293b] border border-slate-100 dark:border-[#334155] rounded-2xl shadow-xs overflow-hidden">
+        <div className="h-[52vh] min-h-[360px] max-h-[560px] overflow-y-auto p-5 sm:p-6 bg-[#F8FAFC]/70 dark:bg-[#0f172a]/70 space-y-4">
           {loadingHistory ? (
             <div className="flex items-center justify-center py-16">
               <Loader2 className="w-6 h-6 text-[#4F8EF7] animate-spin" />
@@ -285,7 +285,7 @@ function MentorPageContent() {
           ) : messages.length === 0 ? (
             <div className="flex items-end gap-2 animate-in fade-in duration-300">
               <BuddioAvatar />
-              <div className="max-w-[80%] px-4 py-3 bg-white border border-slate-100 text-slate-700 text-sm leading-relaxed rounded-2xl rounded-bl-md shadow-sm">
+              <div className="max-w-[80%] px-4 py-3 bg-white dark:bg-[#1e293b] border border-slate-100 dark:border-[#334155] text-slate-700 dark:text-slate-300 text-sm leading-relaxed rounded-2xl rounded-bl-md shadow-sm">
                 {GREETING}
               </div>
             </div>
@@ -300,31 +300,31 @@ function MentorPageContent() {
               ) : (
                 <div key={msg.id} className="flex items-end gap-2 animate-in fade-in duration-300">
                   <BuddioAvatar />
-                  <div className="max-w-[80%] px-4 py-3 bg-white border border-slate-100 text-slate-700 text-sm leading-relaxed rounded-2xl rounded-bl-md shadow-sm break-words">
+                  <div className="max-w-[80%] px-4 py-3 bg-white dark:bg-[#1e293b] border border-slate-100 dark:border-[#334155] text-slate-700 dark:text-slate-300 text-sm leading-relaxed rounded-2xl rounded-bl-md shadow-sm break-words">
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm, remarkMath]}
                       rehypePlugins={[rehypeKatex]}
                       components={{
                         p: (props) => <p className="mb-2 last:mb-0 leading-relaxed text-sm" {...props} />,
-                        strong: (props) => <strong className="font-extrabold text-slate-900" {...props} />,
+                        strong: (props) => <strong className="font-extrabold text-slate-900 dark:text-slate-100" {...props} />,
                         em: (props) => <em className="italic" {...props} />,
-                        h1: (props) => <h1 className="text-xl font-extrabold text-slate-900 mt-4 mb-2 first:mt-0" {...props} />,
-                        h2: (props) => <h2 className="text-lg font-bold text-slate-900 mt-3 mb-2 first:mt-0" {...props} />,
-                        h3: (props) => <h3 className="text-base font-bold text-slate-900 mt-3 mb-1.5 first:mt-0" {...props} />,
-                        h4: (props) => <h4 className="text-sm font-semibold text-slate-800 mt-2 mb-1 first:mt-0" {...props} />,
+                        h1: (props) => <h1 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 mt-4 mb-2 first:mt-0" {...props} />,
+                        h2: (props) => <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-3 mb-2 first:mt-0" {...props} />,
+                        h3: (props) => <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mt-3 mb-1.5 first:mt-0" {...props} />,
+                        h4: (props) => <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mt-2 mb-1 first:mt-0" {...props} />,
                         ul: (props) => <ul className="list-disc pl-5 mb-2 space-y-1" {...props} />,
                         ol: (props) => <ol className="list-decimal pl-5 mb-2 space-y-1" {...props} />,
                         li: (props) => <li className="text-sm leading-relaxed" {...props} />,
-                        hr: (props) => <hr className="my-4 border-slate-200/60" {...props} />,
+                        hr: (props) => <hr className="my-4 border-slate-200/60 dark:border-slate-700" {...props} />,
                         a: (props) => <a className="text-[#4F8EF7] hover:underline font-semibold" target="_blank" rel="noopener noreferrer" {...props} />,
-                        blockquote: (props) => <blockquote className="border-l-4 border-slate-200 pl-3 italic my-2 text-slate-500 bg-slate-50/50 py-1 pr-2 rounded-r-lg" {...props} />,
-                        pre: (props) => <pre className="block bg-slate-50 text-slate-800 p-3 rounded-xl text-xs font-mono border border-slate-100 overflow-x-auto my-3 max-w-full" {...props} />,
+                        blockquote: (props) => <blockquote className="border-l-4 border-slate-200 pl-3 italic my-2 text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-800/40 py-1 pr-2 rounded-r-lg" {...props} />,
+                        pre: (props) => <pre className="block bg-slate-50 dark:bg-[#0f172a] text-slate-800 dark:text-slate-200 p-3 rounded-xl text-xs font-mono border border-slate-100 dark:border-[#334155] overflow-x-auto my-3 max-w-full" {...props} />,
                         code: ({ className, children, ...props }: React.ComponentProps<"code">) => {
                           const isBlock = className?.includes("language-");
                           return isBlock ? (
                             <code className="font-mono text-xs" {...props}>{children}</code>
                           ) : (
-                            <code className="bg-slate-50 text-slate-800 px-1 py-0.5 rounded text-xs font-mono border border-slate-100" {...props}>{children}</code>
+                            <code className="bg-slate-50 dark:bg-[#0f172a] text-slate-800 dark:text-slate-200 px-1 py-0.5 rounded text-xs font-mono border border-slate-100 dark:border-[#334155]" {...props}>{children}</code>
                           );
                         }
                       }}
@@ -339,14 +339,14 @@ function MentorPageContent() {
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="border-t border-slate-100 p-4 flex items-end gap-3">
+        <div className="border-t border-slate-100 dark:border-[#334155] p-4 flex items-end gap-3">
           <textarea
             rows={1}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={t("mentor.chatPlaceholder")}
-            className="flex-1 resize-none px-4 py-3 text-sm bg-slate-50 border border-slate-100 focus:border-[#4F8EF7] focus:bg-white rounded-xl outline-none transition-all text-slate-800 placeholder-slate-400"
+            className="flex-1 resize-none px-4 py-3 text-sm bg-slate-50 dark:bg-[#0f172a] border border-slate-100 dark:border-[#334155] focus:border-[#4F8EF7] focus:bg-white dark:focus:bg-[#0f172a] rounded-xl outline-none transition-all text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
           />
           <button
             onClick={() => handleSend()}

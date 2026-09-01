@@ -73,9 +73,12 @@ class RoadmapService:
             )
             self.db.add(rs)
             self.db.flush()
+            # Create the lesson shell WITHOUT seeding content: the step's short
+            # description is only a roadmap summary. The real, full materi is generated
+            # later (on the intro/"Mulai Belajar" screen) so the first-time flow shows.
             lesson = Lesson(
                 roadmap_step_id=rs.id,
-                content=step.get("description") or f"Materi untuk: {rs.title}",
+                content=None,
                 source="AI Buddio",
             )
             self.db.add(lesson)

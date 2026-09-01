@@ -14,6 +14,7 @@ class LessonResponse(BaseModel):
     source: Optional[str] = None
     video_urls: Optional[List[VideoItem]] = None
     step_title: Optional[str] = None
+    step_description: Optional[str] = None
     topic_title: Optional[str] = None
     topic_id: Optional[int] = None
     created_at: datetime

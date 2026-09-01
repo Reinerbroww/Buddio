@@ -18,6 +18,8 @@ import {
   StickyNote,
   Highlighter,
   Save,
+  Target,
+  ArrowRight,
 } from "lucide-react";
 import api, { ApiError } from "@/services/api";
 import type { Lesson } from "@/lib/types";
@@ -271,17 +273,60 @@ function MateriPageContent() {
       )}
 
       {!hasRichContent && !generating ? (
-        <div className="bg-white dark:bg-[#1e293b] border border-slate-100 dark:border-[#334155] rounded-2xl p-6 sm:p-8 text-center space-y-5">
-          <div className="mx-auto w-14 h-14 rounded-full bg-[#4F8EF7]/10 flex items-center justify-center">
-            <Sparkles className="w-7 h-7 text-[#4F8EF7]" />
+        <div className="bg-white dark:bg-[#1e293b] border border-slate-100 dark:border-[#334155] rounded-2xl overflow-hidden">
+          {lesson.topic_title && (
+            <div className="px-6 sm:px-8 pt-6 sm:pt-8 flex items-center gap-2 text-[11px] font-bold text-[#4F8EF7] uppercase tracking-wider">
+              <BookOpen className="w-3.5 h-3.5" />
+              {t("materi.topic", { topic: lesson.topic_title })}
+            </div>
+          )}
+          <div className="px-6 sm:px-8 py-8 sm:py-10 space-y-6">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#4F8EF7] to-[#7C5CFF] text-white flex items-center justify-center shadow-md shadow-[#4F8EF7]/15">
+              <Sparkles className="w-7 h-7" />
+            </div>
+            <div className="space-y-1.5 max-w-xl">
+              {lesson.step_title && (
+                <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 leading-tight">
+                  {lesson.step_title}
+                </h3>
+              )}
+              <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{t("materi.introDesc")}</p>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-[13px] font-bold text-slate-900 dark:text-slate-100">
+                <Target className="w-4 h-4 text-[#4F8EF7]" />
+                {t("materi.introTitle")}
+              </div>
+              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                {lesson.step_description ? lesson.step_description : t("materi.introObjective", { step: lesson.step_title ?? "" })}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t("materi.introStepsLabel")}</p>
+              <div className="flex items-start gap-3 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                <CheckCircle2 className="w-4 h-4 text-[#22C55E] mt-0.5 shrink-0" />
+                {t("materi.introSteps")}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-4 pt-2 border-t border-slate-100 dark:border-[#334155]">
+              <button
+                onClick={() => router.back()}
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" /> {t("materi.backToRoadmap")}
+              </button>
+              <button
+                onClick={handleGenerateContent}
+                disabled={generating}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#4F8EF7] to-[#7C5CFF] text-white font-semibold text-sm rounded-xl shadow-md shadow-[#4F8EF7]/15 hover:scale-[1.02] hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {t("materi.introStart")} <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
-          <div className="space-y-1.5 max-w-sm mx-auto">
-            <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm">{t("materi.notReady")}</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{t("materi.notReadyDesc")}</p>
-          </div>
-          <button onClick={handleGenerateContent} disabled={generating} className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#4F8EF7] to-[#7C5CFF] text-white font-semibold text-sm rounded-xl shadow-md shadow-[#4F8EF7]/15 hover:scale-[1.02] hover:shadow-lg transition-all duration-300">
-            <Sparkles className="w-4 h-4" /> {t("materi.generate")}
-          </button>
         </div>
       ) : generating ? (
         <div className="bg-white dark:bg-[#1e293b] border border-slate-100 dark:border-[#334155] rounded-2xl p-6 sm:p-8 text-center space-y-5">

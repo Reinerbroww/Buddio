@@ -48,6 +48,7 @@ export interface Lesson {
   source?: string | null;
   video_urls?: VideoItem[] | null;
   step_title?: string | null;
+  step_description?: string | null;
   topic_title?: string | null;
   topic_id?: number | null;
   created_at: string;
